@@ -1,0 +1,15 @@
+host: factufacil.com.ar
+port 3306
+us : lopez
+pass :  lopez357
+db Gestion
+
+IP: 138.36.236.45
+Usuario:
+root
+
+Contraseña:
+kagupuVU87
+
+Puerto:
+3306
