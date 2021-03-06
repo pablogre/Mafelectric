@@ -1,0 +1,180 @@
+{% extends "layout.html" %} {% include "header.html" %} {% block title %} Clientes {% endblock %} {% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col md-12">
+            <div class="jumbotron p-3">
+                <p>Seleccione el Cliente</p>
+                <div class="form-group">
+                    <input type="text" placeholder="Buscar" onkeyup="search(this.value)" size="4"> <button type="button" class="btn btn-primary btn-sm">Buscar</button> <a href="/view_art_tmp/" type="button" class="btn btn-info btn-sm">Detalle</a>
+                    <button type="button" class="btn btn-success btn-sm float-right" data-toggle="modal" data-target="#mymodal">Nuevo</button>
+                </div>
+                <div class="form-group">
+                    <button type="button" class="form-control btn btn-success btn-sm" data-toggle="modal" data-target="#consufin"> <strong> A Consumidor Final</strong></button>
+                </div>
+                {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {% if 'CANCELADA' in message %}
+                <!-- SI ESTA LA PALABRA EXISTE EN EL MENSAJE MUESTO LA CLASE WARNING SI NO SUCCESS-->
+                <div class="alert alert-danger alert-dismissable" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                                    <span aria-hidden="true">x</span>
+                                </button> {{message}}
+                </div>
+                {% else %}
+                <div class="alert alert-success alert-dismissable" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                                    <span aria-hidden="true">x</span>
+                                </button> {{message}}
+                </div>
+                {% endif %} {% endfor %} {% endif %} {% endwith %}
+
+                <table class="table table-hover table-active table-sm">
+                    <tr>
+                        <th>Cliente</th>
+                        <th>C.U.I.T</th>
+                    </tr>
+                    <tbody id="search_cli_sel">
+                        {% for row in clientes %}
+                        <tr>
+                            <td> <a href="/clie_comp/{{ row.0 }}"> {{row.1}} </a> </td>
+                            <td>{{ row.5}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+            <!-- Modal CONSUFIN -->
+            <div id="consufin" class="modal fade" role="dialog">
+
+                <div class="modal-dialog">
+
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h4 class="modal-title">Comprobante a Cons. Final</h4>
+                        </div>
+
+                        <div class="modal-body">
+                            <form action="/m_pagos" method="POST">
+                                <div class="form-group">
+                                    <input type="hidden" class="form-control" name="id_cnsufin" value="0">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Tipo de Doc.:</label>
+                                    <select name="tdoc" id="tdoc" class="form-control" required="1">
+                                            <option value="96">D.N.I.</option>
+                                            <option value="89">L.E.</option>
+                                            <option value="90">L.C.</option>
+                                            <option value="94">PASAPORTE</option>
+                                        </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Número de Documento:</label>
+                                    <input type="text" class="form-control" name="dni" required="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Apellido y Nombre:</label>
+                                    <input type="text" class="form-control" name="cliente" required="1">
+                                </div>
+
+                                <div class="form-group">
+                                    <button class="btn btn-primary" type="submit">Siguiente</button>
+                                </div>
+                            </form>
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- Modal Add  -->
+            <div id="mymodal" class="modal fade" role="dialog">
+
+                <div class="modal-dialog">
+
+                    <div class="modal-content">
+
+                        <div class="modal-header">
+                            <h4 class="modal-title">Nuevo Cliente</h4>
+                        </div>
+
+                        <div class="modal-body">
+                            <form action="{{url_for( 'insert_cli')}}" method="POST">
+
+                                <div class="form-group">
+                                    <label>Código:</label>
+                                    <input type="text" class="form-control" name="codigo" required="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Apellido y Nombre:</label>
+                                    <input type="text" class="form-control" name="cliente" required="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Domicilio:</label>
+                                    <input type="text" class="form-control" name="domicilio" required="1">
+                                </div>
+                                <div class="form-group">
+                                    <label>Telefonos:</label>
+                                    <input type="text" class="form-control" name="telefonos">
+                                </div>
+                                <div class="form-group">
+                                    <label>E-mail:</label>
+                                    <input type="email" class="form-control" name="email">
+                                </div>
+                                <div class="form-group">
+                                    <label>C.U.I.T.:</label>
+                                    <input type="text" class="form-control" name="cuit" placeholder="99-99999999-9" pattern="[0-9]{2}-[0-9]{8}-[0-9]{1}" title="ingrese el C.U.I.T. de esta manera: 99-99999999-99">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Cond. I.V.A.:</label>
+                                    <select id="civa" class="form-control" name="iva"> 
+                                            {% for iva in civa %}
+                                                <option value="{{iva.0}}"> {{iva.1}}</option>
+                                            {% endfor %}    
+                                        </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Localidad:</label>
+                                    <input type="text" class="form-control" name="localidad">
+                                </div>
+                                <div class="form-group">
+                                    <label>Cód. Postal</label>
+                                    <input type="text" class="form-control" name="cp">
+                                </div>
+                                <div class="form-group">
+                                    <button class="btn btn-primary" type="submit">Añadir Cliente</button>
+                                </div>
+
+                            </form>
+
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script type="text/javascript">
+        function search(v) {
+            $.post('/sele_clie_fa/', {
+                buscar: v
+            }, function(data) {
+                $('#search_cli_sel').html(data);
+            });
+        }
+    </script>
+
+    {% endblock %}

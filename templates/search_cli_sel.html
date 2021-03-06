@@ -1,0 +1,8 @@
+{% for row in clientes %}
+
+<tr>
+    <td> <a href="/clie_comp/{{ row.0 }}"> {{row.1}} </a> </td>
+    <td>{{ row.5 }}</td>
+</tr>
+
+{% endfor %}

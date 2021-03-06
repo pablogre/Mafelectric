@@ -1,0 +1,49 @@
+{% extends "layout.html" %} {% include "header.html" %} {% block title %} Clientes {% endblock %} {% block body %}
+<div class="container">
+        <div class="row" id="div-buscar">	   
+			<div class="col md-12">
+				<div class="form-group">
+					<label for="dias">Dias</label>
+					<select class="form-control" id="dias" name="mes">
+					  <option value="0">Hoy</option>
+					  <option value="5">5 Dias</option>
+					  <option value="15">15 Dias</option>
+					  <option value="30">1 Mes</option>
+					  <option value="180">6 Meses</option>
+					  <option value="365">1 Año</option>
+					  <option value="1">Todo</option>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="tipo">Tipo</label>
+					<select class="form-control" id="tipo" name="mes">
+					  <option value="1">Facturas</option>
+					  <option value="2">Recibos</option>
+					  <option value="3">Internos</option>
+					  <option value="4">Todo</option>
+					</select>
+				</div>	
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary mb-2" onClick="resumen()">Ver</button>
+				</div>
+			</div>
+		</div>
+		<div class="row" id="div-detalle">	   
+				
+		</div>		  
+</div>
+<script type="text/javascript">
+				$("#div-detalle").hide();
+	function resumen(){
+				$("#div-buscar").hide("slow");
+				$.post('/ingresos_ventas/', {
+						dias:$("#dias").val(),
+						tipo:$("#tipo").val(),
+						informe:'resumen'
+					}, function(data) {
+					$('#div-detalle').html(data);
+					$('#div-detalle').show("slow");
+        });
+	}
+</script>
+{% endblock %}

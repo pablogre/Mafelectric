@@ -1,0 +1,72 @@
+{% extends "layout.html" %} {% include "header.html" %} {% block title %} Clientes {% endblock %} {% block body %}
+<div class="container">
+    <div class="row" id="div-buscar">
+        <div class="col md-12">			
+				<div class="form-group">
+					<label for="mes"> Mes </label>
+					<select class="form-control" id="mes" name="mes">
+					  <option value="1"{% if mes==1%} selected {%endif%}>ENERO</option>
+					  <option value="2"{% if mes==2%} selected {%endif%}>FEBRERO</option>
+					  <option value="3"{% if mes==3%} selected {%endif%}>MARZO</option>
+					  <option value="4"{% if mes==4%} selected {%endif%}>ABRIL</option>
+					  <option value="5"{% if mes==5%} selected {%endif%}>MAYO</option>
+					  <option value="6"{% if mes==6%} selected {%endif%}>JUNIO</option>
+					  <option value="7"{% if mes==7%} selected {%endif%}>JULIO</option>
+					  <option value="8"{% if mes==8%} selected {%endif%}>AGOSTO</option>
+					  <option value="9"{% if mes==9%} selected {%endif%}>SEPTIEMBRE</option>
+					  <option value="10"{% if mes==10%} selected {%endif%}>OCTUBRE</option>
+					  <option value="11"{% if mes==11%} selected {%endif%}>NOVIEMBRE</option>
+					  <option value="12"{% if mes==12%} selected {%endif%}>DICIEMPBRE</option>
+					</select>
+				  </div>
+				<div class="form-group">
+					<label for="anio">A&ntilde;o</label>
+					<select class="form-control" name="anio" id="anio">
+					  {% set aa=anio - 9 %}
+					  {%for number in range(10)%}
+								<option value={{number + aa}} {% if anio==number + aa%} selected {%endif%}>{{number + aa}}</option>
+					  {%endfor%}
+					</select>
+				</div>		
+			   <div class="form-group">
+					<button type="submit" class="btn btn-primary mb-2" onClick="resumen()">Resumen</button>
+					<button type="submit" class="btn btn-success mb-2" onClick="detalle()">Detalle</button>
+			</div>
+		</div>
+	</div>
+	<div class="row" id="div-resumen" >
+	</div>
+	<div class="row" id="div-detalle">
+		
+	</div>
+	
+</div>
+
+<script type="text/javascript">
+				$("#div-resumen").hide();
+				$("#div-detalle").hide();
+	function resumen(){
+				$("#div-buscar").hide("slow");
+				$.post('/iva_ventas/', {
+						anio:$("#anio").val(),
+						mes:$("#mes").val(),
+						informe:'resumen'
+					}, function(data) {
+					$('#div-resumen').html(data);
+					$('#div-resumen').show("slow");
+        });
+	}
+	function detalle(){
+				$("#div-buscar").hide("slow");
+				$.post('/iva_ventas/', {
+						anio:$("#anio").val(),
+						mes:$("#mes").val(),
+						informe:'detalle'
+					}, function(data) {
+					$('#div-detalle').html(data);
+					$('#div-detalle').show("slow");
+        });
+     }  
+	
+</script>
+{% endblock %}

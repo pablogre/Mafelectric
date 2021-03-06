@@ -1,0 +1,191 @@
+{% extends "layout.html" %} {% include "header.html" %} {% block title %} Cuenta Cte. {% endblock %} {% block body %}
+
+<div class="container">
+    <div class="row">
+        <div class="col md-12">
+            <div class="jumbotron p-3">
+
+                <div class="form-group">
+                    <label>Cliente:</label>
+                    <input type="text" value="{{ cliente.0.1 }}" disabled>
+                </div>
+                <form action="/cta_cte/{{id}}" method="post">
+                    <div class="form-group">
+                        <div>
+                            <input type="date" id="desde" name="desde" value="{{desde}}">
+                            <input type="date" id="hasta" name="hasta" value="{{hasta}}">
+                            <input id="id" name="id" type="hidden" value="{{id}}">
+                        </div>
+                    </div>
+                    <!--  
+                    <div class="form-group">
+                        <div>
+                            <input type="text" id="sal_ant" value="{% if sal_ant.0.0 == none %} {{0}} {% else %} {{ sal_ant.0.0 }}  {% endif %}" disabled>
+                        </div>
+                    </div>
+                    -->
+                    <button type=" buton " class="btn btn-primary ">Buscar</button>
+                    <a href="#" type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#insert_mp">Pago</a>
+                </form>
+
+
+                {% with messages = get_flashed_messages() %}
+                <!-- SI ESTA LA PALABRA EXISTE EN EL MENSAJE MUESTO LA CLASE WARNING SI NO SUCCESS -->
+                {% if messages %} {% for message in messages %} {% if 'CANCELA' in message%}
+                <div class="alert alert-danger alert-dismissable " role="alert ">
+                    <button type="button " class="close " data-dismiss="alert " aria-label="close "><span aria-hidden="true ">x</span></button> {{message}}
+                </div>
+                {% else %}
+                <div class="alert alert-success alert-dismissable " role="alert ">
+                    <button type="button " class="close " data-dismiss="alert " aria-label="close ">
+                                                    <span aria-hidden="true ">x</span>
+                                                </button> {{message}}
+                </div>
+                {% endif %} {% endfor %} {% endif %} {% endwith %}
+
+                <table class="table table-hover table-active table-sm ">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Comprobante</th>
+                        <th>Importe</th>
+                        <th></th>
+                    </tr>
+                    <tr>
+                        <td colspan="2" style="color: brown;">Saldo Anterior</td>
+                        <td style="text-align: right; color:brown ">{% if sal_ant.0.0 == none %} {{0}} {% else %} {{ "{0:.2f}".format(sal_ant.0.0) }} {% endif %}</td>
+                    </tr>
+                    {% set tot=0 %} {% for row in ctacte %}
+                    <tr>
+                        <td> {{row.0.strftime('%d/%m/%Y')}} </td>
+                        <td> <a href="#" data-toggle="modal" data-target="#modalver" onclick="ver( {{row.3}}, '{{ row.1[0:3] }}' ) "> {{row.1}}  </a> </td>
+                        <td style="text-align: right; "> {{row.2}} </td>
+                        <td> <button class="btn btn-default btn-xs" data-toggle="modal" data-target="#borrar{{row.3}}"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button></td>
+                    </tr>
+
+                    <div id="borrar{{row.3}}" class="modal fade" role="dialog">
+                        <!-- si es factura no lo borro -->
+                        {% if row.1[0:3]=='FC ' %}
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title">Factura Electónica</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group" style="color:green;">
+                                        {{row.1 }} Importe: $ {{row.2}}
+                                    </div>
+                                    <h5>Imposible Borrar.</h5>
+                                    <form name="borra" action="#" method="POST">
+                                        <div class="form-group">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {%else%}
+                        <!-- si es recibo -->
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title">Borra el Registro ?</h4>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="form-group" style="color:red;">
+                                        {{row.1 }} Importe: $ {{row.2}}
+                                    </div>
+                                    <form name="borra" action="/delete_reci/{{row.3}}/{{row.6}}" method="POST">
+                                        <div class="form-group">
+                                            <button class="btn btn-danger" type="submit">borrar</button>
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {%endif%}
+                    </div>
+                    {% endfor %}
+
+                    <tr style="background-color:gray ">
+                        <td></td>
+                        <td style="text-align: right; "> <strong> Saldo: $ </strong></td>
+                        <!-- suma la row.2 -->
+                        <td style="text-align: right; "> <strong>{{ ctacte|sum(attribute=2) + sal_ant.0.0 }}</strong> </td>
+                        <td></td>
+                    </tr>
+
+                </table>
+
+                <div id="modalver" class="modal fade " role="dialog ">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-body">
+                                <div id="detalle">
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="insert_mp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title">Agregar Medio de Pago</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                <form action="/insert_mp2/{{id}}" method="POST">
+                                    <div class="form-group">
+                                        <label>Seleccione Medios de Pago</label>
+                                        <select name="m_pago" id="m_pago" required="1" class="form-control">
+                                            <option value="EFECTIVO">EFECTIVO</option>
+                                            <option value="TARJETA">TARJETA</option>
+                                            <option value="CHEQUE">CHEQUE</option>
+                                            <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>importe $:</label>
+                                        <input type="number" class="form-control " min="0.01" step="0.01" name="importe" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Observación:</label>
+                                        <textarea class="form-control" row="3" name="obs"></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button class="btn btn-primary btn-sm" type="submit">Agregar</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function ver(v, p) {
+        $.post('/ver_fact', {
+            id_factura: v,
+            tipo: p
+        }, function(data) {
+            $('#detalle').html(data);
+        });
+    }
+</script>
+
+{% endblock %}

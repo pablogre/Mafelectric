@@ -1,0 +1,32 @@
+<table class="table">
+			<thead>
+			<tr>
+				<th  scope="col">Cuit</th>
+				<th  scope="col">Razon Social</th>
+				<th  scope="col" style="text-align:right">Excento</th>
+				<th  scope="col" style="text-align:right">Neto Gra.</th>	
+				<th  scope="col" style="text-align:right">Iva</th>
+				<th  scope="col" style="text-align:right">Total</th>
+			</tr>
+			</thead>
+			<tbody>
+			  {%for r in detalle%}
+			  <tr>
+					<td>{{r.0}}</td>
+					<td>{{r.1}}</td>
+					<td style="text-align:right">{{r.2}}</th>
+					<td style="text-align:right">{{r.3}}</td>
+					<td style="text-align:right">{{r.4}}</th>
+					<td style="text-align:right">{{r.5}}</td>
+				</tr>	
+			  {%endfor%}
+			<tr>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+				<td style="text-align:right"><strong>{{ detalle|sum(attribute=2) }}</strong></td>
+				<td  style="text-align:right"><strong>{{ detalle|sum(attribute=3) }}</strong></td>
+				<td  style="text-align:right"><strong>{{ detalle|sum(attribute=4) }}</strong></td>
+				<td  style="text-align:right"><strong>{{ detalle|sum(attribute=5) }}</strong></td>				
+			</tr>
+			</tbody>
+		</table>

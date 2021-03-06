@@ -1,0 +1,185 @@
+{% extends "layout.html" %} {% include "header.html" %} {% block title %} Medios de Pago{% endblock %} {% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col md-12">
+            <div class="jumbotron p-3">
+                <p><strong>Cliente: <a href="/sele_clie_fa/"> {{ clientes.0.1}} </a> </strong></p>
+                <h4> <span class="badge badge-dark">A Cancelar $   {% if  total_fa.0.0 == None %} 0.00 {% else %} {{ total_fa.0.0 }} {% endif %} </span> </h4>
+                <a href="#" type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#insert_mp">Agregar</a>
+                <!-- <a href="/val_mp/{{ total_fa.0.0 }}/{{ total_mp.0.0 }}" type="button" class = "btn btn-success btn-sm">Siguiente</a>  -->
+                <a href="#" type="button" class="btn btn-success btn-sm" data-toggle="modal" data-target="#sele_comp">Siguiente</a>
+                <a href="#" type="button" class="btn btn-danger btn-sm float-right" data-toggle="modal" data-target="#anular_fa">Anular</a> {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {% if 'CANCELADA'
+                in message %}
+                <!-- SI ESTA LA PALABRA EXISTE EN EL MENSAJE MUESTO LA CLASE WARNING SI NO SUCCESS-->
+                <div class="alert alert-danger alert-dismissable" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                                    <span aria-hidden="true">x</span>
+                                </button> {{message}}
+                </div>
+                {% else %}
+                <div class="alert alert-success alert-dismissable" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                                    <span aria-hidden="true">x</span>
+                                </button> {{message}}
+                </div>
+                {% endif %} {% endfor %} {% endif %} {% endwith %}
+
+                <table class="table table-hover table-active table-sm">
+                    <tr>
+                        <!-- <th>id</th> -->
+                        <th>Medio de Pago</th>
+                        <th>Importe $</th>
+                        <th>Acción</th>
+                    </tr>
+
+                    <tbody id="search_mp">
+
+                        {% for row in m_pagos %}
+
+                        <tr>
+                            <!-- <td>{{row.0}}</td> -->
+                            <td>{{row.0}}</td>
+                            <td>{{row.1}}</td>
+                            <td>
+                                <button class="btn btn-default btn-xs" data-toggle="modal" data-target="#borrar{{row.5}}"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button>
+                            </td>
+                        </tr>
+
+
+                        <div id="borrar{{row.5}}" class="modal fade" role="dialog">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h4 class="modal-title">Borra el Medio de Pago ?</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form name="borra" action="/delete_mp_tmp/{{row.5}}" method="POST">
+                                            <div class="form-group">
+                                                <button class="btn btn-primary" type="submit">borrar</button>
+                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% endfor %}
+                        <tr class="table-dark">
+                            <td colspan=5 align="right">
+                                <h4> <span class="badge badge-dark">Total $   {% if  total_mp.0.0 == None %} 0.00 {% else %} {{ total_mp.0.0 }} {% endif %} </span> </h4>
+                            </td>
+                        </tr>
+
+                        <tr class="table-dark">
+                            <td colspan=5 align="right">
+                                <h4> <span class="badge badge-dark">Restan $   {% if  (total_fa.0.0 - total_mp.0.0) == None %} 0.00 {% else %} {{ (total_fa.0.0 - total_mp.0.0) }} {% endif %} </span> </h4>
+                            </td>
+                        </tr>
+
+
+                    </tbody>
+
+                </table>
+
+                <div id="anular_fa" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Anula el Comprobante ?</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form name="borra" action="/anular_fa/" method="POST">
+                                    <div class="form-group">
+                                        <button class="btn btn-danger" type="submit">Anular</button>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                <!-- Modal Add  -->
+                <div id="insert_mp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+
+                            <div class="modal-header">
+                                <h4 class="modal-title">Agregar Medio de Pago</h4>
+                            </div>
+
+                            <div class="modal-body">
+                                <form action="/insert_mp" method="POST">
+                                    <div class="form-group">
+                                        <input type="hidden" name="id" value={{clientes.0.0}}>
+                                        <label>Seleccione Medios de Pago</label>
+                                        <select name="m_pago" id="m_pago" required="1" class="form-control">
+                                                <option value="EFECTIVO">EFECTIVO</option>
+                                                <option value="TARJETA">TARJETA</option>
+                                                <option value="CHEQUE">CHEQUE</option>
+                                                {% if session['clie_comp'] != 0%}
+                                                     <option value="CTA-CTE.">CTA-CTE.</option>
+                                                {% endif %}     
+                                                <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                                            </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>importe $:</label>
+                                        <input type="number" class="form-control" min="0.01" step="0.01" name="importe" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label>Observación:</label>
+                                        <textarea class="form-control" row="3" name="obs"></textarea>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <button class="btn btn-primary btn-sm" type="submit">Agregar</button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="sele_comp" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h4 class="modal-title">Seleccione el Comprobante a Emitir</h4>
+                            </div>
+                            <div class="modal-body">
+                                <form action="/val_mp/{{ total_fa.0.0 }}/{{ total_mp.0.0 }}/{{ clientes.0.0 }}" method="POST">
+                                    <div class="form-group">
+                                        <select name="ti_comp" id="ti_comp" class="form-control">
+                                                <option value="1">Factura</option> 
+                                                <option value="2">Nota de Débito</option> 
+                                                <option value="3">Nota de Crédito</option>
+                                                <option value="4">Interno</option>  
+                                            </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <textarea class="form-control" row="3" name="obs_comp"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <button class="btn btn-success" type="submit">Confirmar</button>
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

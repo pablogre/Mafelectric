@@ -1,0 +1,46 @@
+		<table class="table">
+			<thead>
+			<tr>
+				<th scope="col">Concepto</th>
+				<th scope="col" style="text-align:right">Importe</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td>Excento</td>
+				<td style="text-align:right">{{resumen.0.0 or 0.00}}</td>
+			</tr>
+			<tr>			
+				<td>Iva 21%</td>
+				<td style="text-align:right">{{resumen.0.1 or 0.00}}</td>
+			</tr>
+			<tr>			
+				<td>Neto 21%</td>
+				<td style="text-align:right">{{resumen.0.2 or 0.00}}</td>
+			</tr>
+			<tr>			
+				<td>Iva 10.5%</td>
+				<td style="text-align:right">{{resumen.0.3 or 0.00}}</td>
+			</tr>
+			<tr>
+				<td>Neto 10.5%</td>
+				<td style="text-align:right">{{resumen.0.4 or 0.00}}</td>
+			</tr>
+			<tr>			
+				<td>Iva 27%</th>
+				<td style="text-align:right">{{resumen.0.5 or 0.00}}</td>
+			</tr>
+			<tr>			
+				<td>Neto 27%</td>
+				<td style="text-align:right">{{resumen.0.6 or 0.00}}</td></td>
+			</tr>		
+			<tr>
+				<td>Neto 0%</td>
+				<td style="text-align:right">{{resumen.0.8 or 0.00}}</td>
+			</tr>
+			<tr>
+				<td><strong>Total</strong></td>
+				<td style="text-align:right"><strong>{{resumen.0.9 or 0.00}}</strong></td>				
+			</tr>
+			</tbody>
+		</table>
