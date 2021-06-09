@@ -8,12 +8,14 @@ from email import encoders
 def send_mail(fileName, email):
 
     cdir = os.getcwd() + "\static"
-    print(cdir)
+    #print(cdir)
     # Iniciamos los parámetros del script
-    remitente = 'factufacil.envios@gmail.com'
+    #remitente = 'factufacil.envios@gmail.com'
+    remitente = 'pablogustavore@gmail.com'
     destinatarios = [email]
-    asunto = '[RPI] Correo de prueba'
-    cuerpo = 'Estimado cliente le envío comprobante adjunto.'
+    print("DESTINATARIO:", destinatarios)
+    asunto = 'Factura Correspondiente'
+    cuerpo = 'Estimado cliente le envío comprobante adjunto. Por favor confirmar recepción. Saludos...'
     ruta_adjunto = cdir+'\\'+fileName
     nombre_adjunto = fileName
 
@@ -42,14 +44,19 @@ def send_mail(fileName, email):
     # Y finalmente lo agregamos al mensaje
     mensaje.attach(adjunto_MIME)
     
+
     # Creamos la conexión con el servidor
-    sesion_smtp = smtplib.SMTP('smtp.gmail.com', 587)
+    sesion_smtp = smtplib.SMTP('smtp.gmail.com',  587)
+    #sesion_smtp = smtplib.SMTP_SSL('smtp.gmail.com',465)
     
+    sesion_smtp.set_debuglevel(1)
+
     # Ciframos la conexión
     sesion_smtp.starttls()
 
     # Iniciamos sesión en el servidor
-    sesion_smtp.login('factufacil.envios@gmail.com','un.jinja.2020')
+    #sesion_smtp.login('factufacil.envios@gmail.com','un.jinja.2020')
+    sesion_smtp.login('pablogustavore@gmail.com','2605Ironman')
 
     # Convertimos el objeto mensaje a texto
     texto = mensaje.as_string()
@@ -59,10 +66,12 @@ def send_mail(fileName, email):
 
     # Cerramos la conexión
     sesion_smtp.quit()  
+    
     return    
 
 
 
+#send_mail('1_A00003_00000005.pdf', 'pablogustavore@gmail.com')
 
 
 

@@ -15,7 +15,7 @@ app.register_blueprint(resumenes)
 app.secret_key = "Secret Key"
 
 
-connection=conexion()
+#connection=conexion()
 
 
 #This is the index route where we are going to
@@ -35,14 +35,18 @@ def val_log():
 
         cuit = request.form['cuit']
         clave = request.form['clave']    
-       
+        print(cuit)
+        print(clave)
+        connection=conexion()
         cur = connection.cursor()
         query = 'select * from empresas where cuit = %s and clave = %s'
         params = [cuit, clave]
         cur.execute(query,params)
         data = cur.fetchone()
+        print(data)
         connection.commit()
         cur.close
+        connection.close()
         if data is None:
             flash('Sus Datos No Estan Registrados')    
             return render_template('login.html')
@@ -51,8 +55,8 @@ def val_log():
             session['id_empresa'] = data[0]
             session['razon_soc'] = data[1]
             session['usuario'] = randint(0, 100000)
-
-            #return redirect(url_for('clientes'))
+           
+            #return render_template('mensaje.html',mensaje='A FAVOR DE LEANDRO...' )   
             return render_template('factufacil.html')
 
 @app.route('/menu', methods = ['GET','POST'])
@@ -100,7 +104,8 @@ def clientes():
         return render_template('login.html')
     
     id_empresa = session['id_empresa']
-
+    
+    connection=conexion()
     cur = connection.cursor()
     cur.execute('SELECT * FROM cdiva order by codigo')
     data_iva = cur.fetchall()
@@ -118,7 +123,8 @@ def clientes():
             SUM(ifnull(d.debe,0.00) - ifnull(d.haber,0.00)) as saldo 
             from clientes c
             inner JOIN (
-                select b.id_cliente as clie, sum(importe) as debe , 0 as haber,b.id_empresa from facturas_mpagos a 
+                select b.id_cliente as clie, sum(importe) as debe , 0 as haber,b.id_empresa 
+                from facturas_mpagos a 
                 inner join facturas b on a.id_factura=b.id_factura where a.m_pago='CTA-CTE.' 
                 group by b.id_cliente, b.id_empresa
             UNION 
@@ -138,6 +144,7 @@ def clientes():
     cur.close()
     
     session['clientes_sel'] = 0
+    connection.close()
 
     if request.method == 'POST':
         return render_template("search_cli.html", clientes = data, civa = data_iva)
@@ -177,6 +184,7 @@ def insert_cli():
                 else:
                     ### busco si el cuit ya existe
                     if len(cuit) > 0:
+                        connection=conexion()
                         cur = connection.cursor()
                         query = """
                                 SELECT cliente
@@ -187,18 +195,20 @@ def insert_cli():
                         cur.execute(query,params)
                         data = cur.fetchone()
                         connection.commit()
+                        connection.close()
                         if data !=  None:
                             for row in data:
                                 cliente = data
                                 flash('ERROR El C.U.I.T. PERTENECE A: '+ cliente[0] + " REGISTRO CANCELADO !!")
                                 return redirect(url_for('cliente'))
-                       
+            
+            connection=conexion()           
             cur = connection.cursor()
             query = "INSERT INTO clientes (cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
             params = [cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni]
             cur.execute(query, params)
             connection.commit()
-
+            connection.close()
             flash('Cliente Agregado Correctamente')
         except:
              flash('YA EXISTE, VERIFIQUE CÓDIGO O CLIENTE  OPERACION CANCELADA ')
@@ -242,6 +252,7 @@ def update_cli():
             else:
                 ### busco si el cuit ya existe
                 if len(cuit) > 0:
+                    connection=conexion()
                     cur = connection.cursor()
                     query = """
                             SELECT cliente , id
@@ -252,6 +263,7 @@ def update_cli():
                     cur.execute(query,params)
                     data = cur.fetchone()
                     
+                    connection.close()
                     print(data)
                     #time.sleep(5) ## detiene el sistema 5 segundos
                     if data !=  None:
@@ -264,6 +276,7 @@ def update_cli():
                             flash('ERROR El C.U.I.T. PERTENECE A: '+ cliente[0] + " NO SE MODIFICO EL REGISTRO !!")
                             return redirect(url_for('clientes'))
             
+        connection=conexion()
         cur = connection.cursor()
         query= """ 
                 UPDATE clientes
@@ -282,7 +295,8 @@ def update_cli():
         cur.execute(query, params)
         connection.commit()
         flash('Registro modificado con Exito !')
-        
+        connection.close()
+
         return redirect(url_for('clientes'))
     
     
@@ -293,11 +307,13 @@ def update_cli():
 def delete_cli(id):
     if not session.get('id_empresa'):
         return render_template('login.html')
+    
+    connection=conexion()
     cur = connection.cursor()
     cur.execute('DELETE FROM clientes WHERE id = {0}'.format(id))
     connection.commit()
     flash('Registro borrado !')
- 
+    connection.close()
     return redirect(url_for('clientes'))
  
 @app.route('/registrar', methods=['GET','POST'])
@@ -322,6 +338,7 @@ def registro():
         else:
             ### busco si el cuit ya existe
             if len(cuit) > 0:
+                connection=conexion()
                 cur = connection.cursor()
                 query = """
                         SELECT razon_soc
@@ -332,18 +349,21 @@ def registro():
                 cur.execute(query,params)
                 data = cur.fetchone()
                 connection.commit()
+                connection.close()
                 if data !=  None:
                     for row in data:
                         empresa = data
                         flash('ERROR El C.U.I.T. PERTENECE A: '+ empresa[0] + " REGISTRO CANCELADO !!")
                         return render_template('registro.html')
         
+            connection=conexion()
             cur = connection.cursor()
             query = 'insert into empresas (cuit, razon_soc, direccion, email, clave, fe_ini_act, nro_iibb)  values(%s, %s, %s, %s, %s, %s, %s)'
             params = [cuit, razon, direccion, email, clave, fe_ini_act, nro_iibb]
             cur.execute(query,params)
             connection.commit()
             cur.close
+            connection.close()
             flash('Felicitaciones... ya esta Registrado !!!')
             return redirect(url_for('login'))
 
@@ -359,12 +379,14 @@ def rubros():
     if request.method == 'POST':
         filtro = filtro + request.form['buscar'] + filtro
     
+    connection=conexion()
     query = 'SELECT * FROM rubros where rubro like %s and id_empresa = %s order by rubro'
     params = [filtro, id_empresa]
     cur = connection.cursor()
     cur.execute(query, params)
     data = cur.fetchall()
     cur.close()
+    connection.close()
     if request.method == 'POST':
         return render_template("search_rub.html", rubros = data)
     else:
@@ -407,12 +429,14 @@ def update_ru():
         rubro = request.form['rubro']
 
         print(id_rub)
+        connection=conexion()
         cur = connection.cursor()
         query = 'update rubros set rubro = %s where id_rubro = %s'
         params = [rubro.upper(), id_rub]
         cur.execute(query,params)
         connection.commit()
         cur.close()
+        connection.close()
 
         flash('Registro modificado con Exito !')
  
@@ -424,11 +448,13 @@ def delete_id(id):
     if not session.get('id_empresa'):
         return render_template('login.html')
 
+    connection=conexion()
     cur = connection.cursor()
     cur.execute('DELETE FROM rubros WHERE id_rubro = {0}'.format(id))
     connection.commit()
     cur.close()
-  
+    connection.close()
+
     flash('Registro borrado !')
   
     return redirect(url_for('rubros'))
@@ -440,6 +466,7 @@ def articulos():
         return render_template('login.html')
 
     id_empresa = session['id_empresa']
+    connection=conexion()
     cur = connection.cursor()
     query = 'select * from rubros where id_empresa = %s order by rubro'
     params = [id_empresa]
@@ -466,6 +493,7 @@ def articulos():
     data = cur.fetchall()
     cur.close()
     alicuotas = [0.0, 10.5, 21.0, 27.0]
+    connection.close()
 
     if request.method == 'POST':
         return render_template("search_art.html", articulos = data, rubros = rub, ali_iva = alicuotas, ultimo = ult)
@@ -492,12 +520,14 @@ def insert_art():
                 iva = request.form['iva']
                 id_empresa = session['id_empresa']
 
+                connection=conexion()
                 cur = connection.cursor()
                 query = 'insert into articulos (codigo, articulo, id_rubro, costo, precio1, precio2, iva, id_empresa) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)'
                 params = [codigo, articulo, id_rubro, costo, precio1, precio2, iva, id_empresa]
                 print(params)
                 cur.execute(query,params)
                 connection.commit()
+                connection.close()
 
                 flash('Artículo Agregado Correctamente')
             except:
@@ -525,6 +555,7 @@ def update_art():
         precio2 = request.form['precio2']
         iva = request.form['iva']
     
+        connection=conexion()
         cur = connection.cursor()
         cur.execute("""
             UPDATE articulos
@@ -539,6 +570,7 @@ def update_art():
         """, (codigo, articulo, id_rubro, costo, precio1, precio2, iva, id_art))
         flash('Registro modificado con Exito !')
         connection.commit()
+        connection.close()
          
         return redirect(url_for('articulos'))
 
@@ -549,12 +581,14 @@ def delete_art(id):
     if not session.get('id_empresa'):
         return render_template('login.html')
 
+    connection=conexion()
     cur = connection.cursor()
     cur.execute('DELETE FROM articulos WHERE id_art = {0}'.format(id))
     connection.commit()
     flash('Registro borrado !')
- 
-    return redirect(url_for('clientes'))
+    connection.close()
+
+    return redirect(url_for('articulos'))
 
 @app.route('/articulos_fa', methods = ['GET', 'POST'])
 def articulos_fa():
@@ -565,6 +599,7 @@ def articulos_fa():
     id_empresa = session['id_empresa']
     #Fecha actual
     fecha = date.today()
+    connection=conexion()
     cur = connection.cursor()
     query = "delete from factura_tmp where fecha < %s and id_empresa = %s"
     params = [fecha, id_empresa]
@@ -602,6 +637,7 @@ def articulos_fa():
     cur.execute(query, params)
     ult = cur.fetchone()
     cur.close()
+    connection.close()
 
     if request.method == 'POST':
         return render_template("search_art2.html", articulos = data, rubros = rub)
@@ -616,6 +652,8 @@ def view_art_tmp():
 
     id_empresa = session['id_empresa']
     usuario = session['usuario']
+    
+    connection=conexion()
     cur = connection.cursor()
     query = "select * from factura_tmp where id_empresa = %s and usuario = %s"
     params = [id_empresa, usuario]
@@ -628,7 +666,8 @@ def view_art_tmp():
     params = [id_empresa, usuario]
     cur.execute(query, params)
     data2 = cur.fetchall()
-    
+    connection.close()
+
     session['clie_comp'] = 0
     session['cliente'] = ''
     session['dni'] = 0
@@ -658,23 +697,26 @@ def insert_art_tmp():
             flash(" LA CANTIDAD Y PRECIO NO PUEDEN SER CERO OPERACION CANCELADA")
             return redirect(url_for('view_art_tmp'))
 
+        connection=conexion()
         cur = connection.cursor()
         query = "insert into factura_tmp (id_empresa, usuario, id_art, articulo, precio, cantidad, iva, dto, fecha) values (%s,%s,%s,%s,%s,%s,%s,%s,%s)"
         params = [id_empresa, usuario, id_art, articulo, precio, cantidad, iva, dto, fecha]
         cur.execute(query, params)
         connection.commit()
         cur.close()
+        connection.close()
 
         return redirect(url_for('view_art_tmp'))
 
 # Borra el item de factura_tmp
 @app.route('/delete_art_tmp/<id_tmp>', methods =['GET', 'POST'] )
 def delete_art_tmp(id_tmp):
+        connection=conexion()
         cur = connection.cursor()
         cur.execute('DELETE FROM factura_tmp WHERE id_tmp = {0}'.format(id_tmp))
         connection.commit()
         cur.close()
-
+        connection.close()
         return redirect(url_for('view_art_tmp'))
 
 # Borra todos los items de factura_tmp
@@ -682,6 +724,8 @@ def delete_art_tmp(id_tmp):
 def anular_fa():
     id_empresa = session['id_empresa']
     usuario = session['usuario']
+
+    connection=conexion()
     cur = connection.cursor()
     query = "delete from factura_tmp where id_empresa = %s and usuario = %s"
     params = [id_empresa, usuario]
@@ -696,6 +740,7 @@ def anular_fa():
     cur.execute(query, params)
     connection.commit()
     cur.close()
+    connection.close()
 
     return redirect(url_for('view_art_tmp'))
 
@@ -708,6 +753,7 @@ def sele_clie_fa():
     session['clientes_sel'] = 1 # para dar de alta el cliente y saber de donde lo estoy llamando 1 es de aca 0 es de clientes
     id_empresa = session['id_empresa']
 
+    connection=conexion()
     cur = connection.cursor()
     cur.execute('SELECT * FROM cdiva order by codigo')
     data_iva = cur.fetchall()
@@ -724,6 +770,7 @@ def sele_clie_fa():
     cur.execute(query, params)
     data = cur.fetchall()
     cur.close()
+    connection.close()
 
     if request.method == 'POST':
         return render_template("search_cli_sel.html", clientes = data, civa = data_iva)
@@ -739,12 +786,15 @@ def clie_comp(id):
     usuario = session['usuario']
     dni = session['dni']
     cliente = session['cliente']
+
+    connection=conexion()
     cur = connection.cursor()
     query = 'update  factura_tmp set id_cliente =  %s  where  id_empresa = %s and usuario = %s'
     params=[id_cliente, id_empresa, usuario]
     cur.execute(query, params)
     connection.commit()
     cur.close()
+    connection.close()
     return redirect(url_for('m_pagos'))
 
 @app.route('/m_pagos', methods = ['GET','POST'] )
@@ -753,6 +803,7 @@ def m_pagos():
     id_empresa = session['id_empresa']
     usuario = session['usuario']
 
+    connection=conexion()
     cur = connection.cursor()
     query = "select * from m_pagos_tmp where id_empresa = %s and usuario = %s"
     params = [id_empresa, usuario]
@@ -803,6 +854,7 @@ def m_pagos():
     data4 = cur.fetchall()
 
     cur. close()
+    connection.close()
 
     return render_template('m_pagos.html', m_pagos = data1, total_mp = data2, clientes = data3, total_fa = data4 )
 
@@ -816,6 +868,8 @@ def insert_mp():
         fecha = date.today()
         usuario = session['usuario']
         id_empresa = session['id_empresa']
+
+        connection=conexion()
         cur = connection.cursor()
         query = "insert into m_pagos_tmp (m_pago, importe, id_empresa, usuario, fecha, obs) values(%s,%s,%s,%s,%s,%s)"
         params = [m_pago, importe, id_empresa, usuario, fecha, obs]
@@ -823,18 +877,21 @@ def insert_mp():
         connection.commit()
         print(cur.lastrowid)
         cur.close()
+        connection.close()
        
     return redirect(url_for('m_pagos'))
 
 @app.route('/delete_mp_tmp/<int:id>', methods = ['GET','POST'] )
 def delete_mp_tmp(id):
     print(id)
+    connection=conexion()
     cur = connection.cursor()
     query = "delete from m_pagos_tmp where id_mpago = %s"
     params = [id]
     cur.execute(query, params)
     connection.commit()
     cur.close()
+    connection.close()
 
     return redirect(url_for('m_pagos'))
 
@@ -844,8 +901,8 @@ def val_mp(t_mp, t_fa, id_cliente):
         flash("EXISTEN DIFERENCIA ENTRE EL TOTAL A CANCELAR Y EL TOTAL DE MEDIOS DE PAGO,  OERACION CANCELADA ")
         return redirect(url_for('m_pagos'))
     else:
-       total = t_fa
-       if request.method == 'POST':
+        total = t_fa
+        if request.method == 'POST':
             id_empresa = session['id_empresa']
             usuario = session['usuario']
             #Fecha actual
@@ -856,11 +913,13 @@ def val_mp(t_mp, t_fa, id_cliente):
             if tipo_comp == "4":
                 puerto = 1
                 #Saco el ultimo interno 
+                connection=conexion()
                 cur = connection.cursor()
                 query = "select ifnull( max(numero),0)+1 as numero from facturas where id_empresa = %s and tipo_comp = %s"
                 params = [id_empresa, tipo_comp]
                 cur.execute(query, params)
                 data = cur.fetchall()
+                cur.close()
                 numero = data[0]
                 dni = session['dni']
                 cliente  = session['cliente']
@@ -932,9 +991,11 @@ def val_mp(t_mp, t_fa, id_cliente):
                 print(data1)
                 fileName  = data1[0]
                 email = data1[1]
+                connection.close()
                 return render_template('ver_comp.html', fileName= fileName, email = email)    
 
             else:    
+                connection=conexion()
                 cur = connection.cursor()
                 session['bandera'] = randint(0,1000000)
                 bandera =  session['bandera']
@@ -943,27 +1004,47 @@ def val_mp(t_mp, t_fa, id_cliente):
                 cur.execute(query, params)
                 connection.commit()
                 cur.close()
-                time.sleep(3) ## detiene el sistema 3 segundos
-
-                #verifico si proceso la fact. electronica
-                cur = connection.cursor()
-              
-                query = "select obs from  factura_tmp  where id_empresa = %s and usuario = %s limit 1"
-                params = [id_empresa, usuario]
-                cur.execute(query, params)
-                data = cur.fetchall()
-                cur.close()
-
-                if len(data) > 0:
-                    if len(data[0]) > 0:
-                        return render_template('mensaje.html',mensaje=data[0] )
+                cont01=0
+                while cont01 < 4 :
+                    time.sleep(3) ## detiene el sistema 3 segundos              				
+                    #verifico si proceso la fact. electronica
+                    connection=conexion()
+                    cur = connection.cursor()              
+                    query = "select obs from  factura_tmp  where id_empresa = %s and usuario = %s limit 1"
+                    params = [id_empresa, usuario]
+                    cur.execute(query, params)
+                    data = cur.fetchone()
+                    cur.close()
+                    connection.close()
+                    print(data)
+                    if not data is None:  #Quiere decir el registro de factura_tmp sigue alli
+                        print('entre por not is none ')
+                        if (data[0]) =='':
+                            print('sume 1 ')
+                           
+                            #quiere decir que la quiere decir que no hay nada en observaciones..entonces puede que tarde en pasar ..vuelvo a intetar
+                            cont01+=1                            
+                        else: #quiere decir que hay algun menseje para mostrar de afip lo mando
+                            cont01=17 #fuerzo la salida proque hay error
+                    else: # si no hay nada entonces el proceso ya paso a la tabla facturas SALgo 
+                        cont01=18
+                if cont01==17 : 
+                    #quiere decir que hay algo en observaciones de afip puestro
+                    return render_template('mensaje.html',mensaje=data[0] )
+                else:
+                    if cont01==4: 
+                        #quiere decir que ya intento 4 veces y no paso nada entonces mostramos tambien un mensaje
+                        return render_template('mensaje.html',mensaje='No hay respuesta de afip. intente luego')
                     else:
-                        return render_template('mensaje.html',mensaje='A FAVOR DE LEANDRO...' )   
-
+                        if cont01==18:
+                            print('ok')#PASO OK
+                        else:
+                            return render_template('mensaje.html',mensaje='Error No Contemplado en la aplicacion llamar al monje')
 
 
                 #select dela factura con id_empresa,id_usuario,bandera
                 #si encuentra {genera pdf etc..} idfactura_letra_puerto_numero.pdf
+                connection=conexion()
                 cur = connection.cursor()
                 query = "select id_factura from facturas where bandera = %s and  id_empresa = %s and usuario = %s"
 
@@ -971,9 +1052,13 @@ def val_mp(t_mp, t_fa, id_cliente):
                 cur.execute(query, params)
                 data = cur.fetchall()
                 cur.close()
+                connection.close()
                 print(data)
-                if len(data) != 0:
-                    data1 = gen_pdf_fisc(data[0])
+
+                if data:
+                    id_fac = data[0][0]
+                    print("id factura:",id_fac)
+                    data1 = gen_pdf_fisc(id_fac)
                     print(data1)
                     fileName  = data1[0]
                     email = data1[1]
@@ -987,28 +1072,28 @@ def val_mp(t_mp, t_fa, id_cliente):
                         # seguro tiene error de afip
                     #Si no tiene nada es porque no paso aun por afip    
 
-        
-    print("todo ok")
-    return redirect(url_for('m_pagos'))
 
 
 @app.route('/estado/', methods = ['GET','POST'])
 def estado():
     id_empresa = session['id_empresa']
     usuario = session['id_usuario']
-
+    
+    connection=conexion()
     cur = connection.cursor()
     query = "update factura_tmp set estado = 'E' where id_empresa = %s and usuario = %s"
     params = [id_empresa, usuario]
     cur.execute(query, params)
     connection.commit()
     cur.close()
+    connection.close()
     
     return render_template('procesando.html')
 
 
 @app.route('/cta_cte/<id>', methods = ['GET','POST'])
 def cta_cte(id):
+    connection=conexion()
     cur = connection.cursor()
     hasta = datetime.datetime.utcnow()
     desde = hasta - datetime.timedelta(days=60)
@@ -1043,10 +1128,11 @@ def cta_cte(id):
             select T1.*,clientes.id,clientes.cliente from (
             select facturas.fecha ,
             concat(CASE WHEN facturas.id_tipo_comp = 1 THEN 'FC '
-            WHEN facturas.id_tipo_comp = 2 THEN 'NC '
-            WHEN facturas.id_tipo_comp = 3 THEN 'ND '
+            WHEN facturas.id_tipo_comp = 2 THEN 'ND '
+            WHEN facturas.id_tipo_comp = 3 THEN 'NC '
             END  ,  facturas.letra,' ',lpad(facturas.puerto,5,'0'),'-',lpad(facturas.numero,8,'0')) as nro,
-            facturas_mpagos.importe, facturas.id_factura,facturas.id_cliente,facturas.id_empresa
+            case when facturas.id_tipo_comp = 3 then facturas_mpagos.importe * -1
+            else facturas_mpagos.importe end, facturas.id_factura,facturas.id_cliente,facturas.id_empresa
             from facturas_mpagos 
             left join facturas on facturas.id_factura = facturas_mpagos.id_factura 
             left join clientes on clientes.id = facturas.id_cliente
@@ -1062,6 +1148,7 @@ def cta_cte(id):
     cur.execute(query, params)
     data = cur.fetchall()
     cur.close()
+    connection.close()
     return render_template('cta_cte.html', ctacte = data, sal_ant=ant, desde=desde.strftime("%Y-%m-%d"), hasta=hasta.strftime("%Y-%m-%d"), id=id, cliente = cliente)
 
 
@@ -1071,10 +1158,21 @@ def ver_fact():
     if request.method == 'POST':
         id_factura = request.form['id_factura']
         tipo = request.form['tipo']
+        print('id_factura:', id_factura)
+        print('tipo:', tipo)
+        connection=conexion()
         cur = connection.cursor()
+        filename  = ''
+        email = '' 
         if tipo == 'REC':
             query = "select m_pago, obser, concat('REC ','00001-',lpad(recibos.numero,8,'0')) as nro, total, id  from recibos where id = %s"
         else:
+            data1 = gen_pdf_fisc( id_factura )
+            if data1:
+                print(data1)
+                filename  = data1[0]
+                email = data1[1]
+             
             query = '''
                     select DATE_FORMAT(facturas.fecha, '%%d/%%m/%%Y') as fecha, concat(CASE WHEN facturas.id_tipo_comp = 1 THEN 'FC '
                     WHEN facturas.id_tipo_comp = 2 THEN 'NC '
@@ -1089,7 +1187,8 @@ def ver_fact():
         cur.execute(query, params)
         data = cur.fetchall()
         cur.close()
-        return render_template('fac_detalle.html', detalle = data, tipo = tipo)
+        connection.close()
+        return render_template('fac_detalle.html', detalle = data, tipo = tipo, id_factura = id_factura, filename = filename, email = email)
 
 
 @app.route('/insert_mp2/<id>', methods = ['GET','POST'] )
@@ -1105,8 +1204,9 @@ def insert_mp2(id):
         id_empresa = session['id_empresa']
        
         #Saco nro de recibo
+        connection=conexion()
         cur = connection.cursor()
-        query = "select (max(numero) + 1) as numero from recibos where id_empresa = %s"
+        query = "select ifnull( (max(numero) + 1),1) as numero from recibos where id_empresa = %s"
         params = [id_empresa]
         cur.execute(query, params)
         data = cur.fetchall()
@@ -1121,25 +1221,41 @@ def insert_mp2(id):
         connection.commit()
         print(cur.lastrowid)
         cur.close()
+        connection.close()
         return redirect(url_for('cta_cte',id=id))
 
 
 @app.route('/delete_reci/<id_fac>/<id_clie>', methods = ['GET','POST'] )
 def delete_reci(id_fac,id_clie):
     if request.method == 'POST':
+        connection=conexion()
         cur = connection.cursor()
         query = "delete from recibos where id = %s"
         params = [id_fac]
         cur.execute(query, params)
         connection.commit()
         cur.close()
+        connection.close()
         return redirect(url_for('cta_cte',id=id_clie))
 
 
-@app.route('/envio_mail/<fileName>/<email>', methods = ['GET','POST'] )
-def envio_mail(fileName, email):
-    send_mail(fileName,  'ntizzano@hotmail.com')
-    return render_template('ver_comp.html', fileName= fileName, email= 'ntizzano@hotmail.com')   
+@app.route('/envio_mail', methods = ['GET','POST'] )
+def envio_mail():
+    print("estoy en envio mail")
+    if request.method == 'POST':
+        filename = request.form['filename']
+        email = request.form['email']
+        try:
+            send_mail(filename,  email)
+            return 'CORREO ENVIADO CON EXITO !!!'
+        except:
+            return "HUBO UN ERROR, EL CORREO NO FUE ENVIADO !!!"
+   
+
+    
+
+    #return render_template('ver_comp.html', fileName= fileName, email= email)   
+
 
 @app.route('/ver_comp', methods = ['GET','POST'] )
 def ver_comp():

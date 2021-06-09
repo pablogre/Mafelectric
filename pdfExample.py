@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 from random import randint
 from Conexion import conexion
 from datetime import datetime, date
+from qr import qr
 import time
 import datetime
 import os
@@ -67,6 +68,7 @@ def gen_pdf_fisc(id):
 
     print(data)
     
+
     # CARGO LA LISTA DE DATOS
     data2 = data[0]
     
@@ -166,18 +168,18 @@ def gen_pdf_fisc(id):
     pdf.setFont('Helvetica-Bold', 16)
     pdf.drawString(100, 780, data2[1] )
 
-    pdf.setFont('Helvetica-Bold', 9)
+    pdf.setFont('Helvetica-Bold', 8)
     pdf.drawString(60, 755, 'Razón Social:')
-    pdf.setFont('Helvetica', 9)
+    pdf.setFont('Helvetica', 8)
     pdf.drawString(130, 755, data2[1])
-    pdf.setFont('Helvetica-Bold', 9)
+    pdf.setFont('Helvetica-Bold', 8)
     pdf.drawString(60, 740, 'Domicilio Comercial:')
-    pdf.setFont('Helvetica', 9)
+    pdf.setFont('Helvetica', 8)
     pdf.drawString(160, 740, data2[3])
-    #Localidad
-    pdf.drawString(160, 730, data2[63])
+    #Localidad + Provincia
+    pdf.drawString(60, 730, data2[15]+' - '+data2[16])
     # Condición IVA
-    pdf.setFont('Helvetica-Bold', 9)
+    pdf.setFont('Helvetica-Bold', 8)
     pdf.drawString(60, 715, 'Condición IVA: ')
     if data2[11] == 1:
         iva = 'Resp. Inscripto'
@@ -209,7 +211,9 @@ def gen_pdf_fisc(id):
     pdf.setFont('Helvetica-Bold', 9)
     pdf.drawString(325, 705, 'Fecha Inicio de Actividades: ')
     pdf.setFont('Helvetica', 9)
-    pdf.drawString(450, 705, data2[13]) # poner el data2[x] que corresponda
+    fecha = str(data2[13]) 
+    pdf.drawString(450, 705, fecha[-2:]+'/'+fecha[-5:-3]+'/'+fecha[0:4])
+   
 
     # Comprobante
 
@@ -233,6 +237,10 @@ def gen_pdf_fisc(id):
     pdf.drawString(325, 750, 'Fecha:')
     fecha = str(data2[20]) 
     pdf.drawString(360, 750, fecha[-2:]+'/'+fecha[-5:-3]+'/'+fecha[0:4])
+    #Fecha de Vto.
+    pdf.drawString(410, 750, 'Fecha Vto:')
+    pdf.drawString(465, 750, fecha[-2:]+'/'+fecha[-5:-3]+'/'+fecha[0:4])
+
 
     # ###################################
     # 2) Sub Title 
@@ -257,10 +265,10 @@ def gen_pdf_fisc(id):
     pdf.setFont('Helvetica', 8)
     pdf.drawString(55,637,'Código')
     pdf.drawString(160,637,'Descripción')
-    pdf.drawString(300,637,'Cantidad')
-    pdf.drawString(360,637,'Precio')
-    pdf.drawString(420,637,'IVA')
-    pdf.drawString(480,637,'Subtotal')
+    pdf.drawString(320,637,'Cantidad')
+    pdf.drawString(380,637,'Precio')
+    pdf.drawString(440,637,'IVA')
+    pdf.drawString(500,637,'Subtotal')
     pdf.line(50, 630, 550, 630)
 
     # Cuit cliente
@@ -270,45 +278,82 @@ def gen_pdf_fisc(id):
     pdf.drawString(90, 685, data2[66])
     # Razón Social del cliente
     pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(180, 685, 'Nombre y Apellido o Razón Social: ')
-    pdf.setFont('Helvetica', 9)
-    pdf.drawString(332, 685, data2[63])
+    pdf.drawString(165, 685, 'Nom. y Apellido o Razón Soc.: ')
+    pdf.setFont('Helvetica', 8)
+    pdf.drawString(300, 685, data2[49])
+    #pdf.drawString(332, 685, data2[63])
     # iva del cliente
     pdf.setFont('Helvetica-Bold', 9)
     pdf.drawString(60,670, 'Condición IVA: ')
-    if data2[68] == 1:
+    if data2[67] == 1:
         iva = 'Resp. Inscripto'
-    elif  data2[68] == 2:
+    elif  data2[67] == 2:
         iva = 'Resp. No Inscri.'
-    elif  data2[68] == 3:
+    elif  data2[67] == 3:
         iva = 'No Responsable' 
-    elif  data2[68] == 4:      
+    elif  data2[67] == 4:      
         iva = 'Exento' 
-    elif  data2[68] == 5:   
+    elif  data2[67] == 5:   
         iva = 'Consumidor Final'      
-    elif  data2[68] == 6:   
+    elif  data2[67] == 6:   
         iva = 'Resp.Monotributo'     
 
     pdf.setFont('Helvetica', 9)
     pdf.drawString(135, 670, iva)
 
+    #Condición de Vta.
+    pdf.setFont('Helvetica-Bold', 9)
+    pdf.drawString(60,655, 'Condición de Vta.: Cta.Cte.')
+
     #Domicilio cliente
     pdf.setFont('Helvetica-Bold', 9)
     pdf.drawString(230, 670, 'Domicilio Comercial: ')
     pdf.setFont('Helvetica', 9)
-    pdf.drawString(322, 670, data2[64])
-    ###########################
-    # Cuerpo del comprobante
-    ###########################
+    pdf.drawString(322, 670, data2[63])
+
+    ########################### ########################### ###########################
+    # Cuerpo del comprobante  aca muestro los articulos y precios
+    ########################### ########################### ###########################
     x = 55
-    y = 620
+    y = 620    
     for row in data:
+        #Código
         pdf.drawString(55,y,row[72])
-        pdf.drawString(100,y,row[55])
-        pdf.drawRightString(320,y,str(row[59])) 
-        pdf.drawRightString(380,y,str(row[57]))
-        pdf.drawRightString(440,y,str(row[58]))
-        pdf.drawRightString(510,y,str((row[57] + row[58])))
+        
+        #Descripción del art.
+        pdf.setFont('Helvetica', 8)
+        largo = len(row[55])
+        desc = row[55]
+        ini = fin = 0
+        while ini <= largo:
+            fin = fin + 60
+            pdf.drawString(80,y,desc[ini:fin])
+            ini = ini + 60
+            if largo > ini:
+                y = y - 10
+        #pdf.drawString(80,y,row[55])
+
+        #Cant.
+        cant = str(row[59])
+        pdf.drawRightString(340,y,cant.replace(',','@').replace('.',',').replace('@','.'))
+
+        #Precio
+        if data2[44].upper() == 'A':
+            # le saco el iva
+            precio = str("{:.2f}".format(row[57]  / ((row[58]+100)/100)))
+            pdf.drawRightString(400,y,precio.replace(',','@').replace('.',',').replace('@','.'))
+        else:
+            precio = str(row[57])
+            pdf.drawRightString(400,y,precio.replace(',','@').replace('.',',').replace('@','.'))
+        
+        #IVA
+        if data2[67] == 1 or data2[67] == 6:
+            iva = str(row[42])
+            pdf.drawRightString(460,y,iva.replace(',','@').replace('.',',').replace('@','.'))
+
+        #Sub.tot       
+        subtot = str( "{:.2f}".format( row[57] * row[59] ) )
+        pdf.drawRightString(530,y,subtot.replace(',','@').replace('.',',').replace('@','.'))
         y = y - 10
 
     ########################
@@ -317,37 +362,52 @@ def gen_pdf_fisc(id):
     pdf.line(50, 195, 550, 195)
     pdf.line(50, 110, 550, 110)
     pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(380,180,'Neto Gravado: $')
-    pdf.setFont('Helvetica', 9)
-    pdf.drawRightString(510,180,str(row[27]))
+   
+    # abajo de 'Comprobante Autorizado' va la img. del qr
+    pdf.drawString(65,180,'Comprobante Autorizado')
+    
+    ## Factura A / B
+    if data2[44].upper() == 'A':   
+        pdf.drawString(400,180,'Neto Gravado: $')
+        pdf.setFont('Helvetica', 9)
+        pdf.drawRightString(530,180,str(row[27]))
+        pdf.setFont('Helvetica-Bold', 9)
+        pdf.drawString(400,170,'IVA 27%: $')
+        pdf.setFont('Helvetica', 9)
+        iva27 = str(row[37])
+        pdf.drawRightString(530,170,iva27.replace(',','@').replace('.',',').replace('@','.'))
+
+        pdf.setFont('Helvetica-Bold', 9)
+        pdf.drawString(400,160,'IVA 21%: $')
+        pdf.setFont('Helvetica', 9)
+        iva21 = str(row[25])
+        pdf.drawRightString(530,160,iva21.replace(',','@').replace('.',',').replace('@','.'))
+
+
+        pdf.setFont('Helvetica-Bold', 9)
+        pdf.drawString(400,150,'IVA 10.5%: $')
+        pdf.setFont('Helvetica', 9)
+        iva10 = str(row[26])
+        pdf.drawRightString(530,150,iva10.replace(',','@').replace('.',',').replace('@','.'))
+    else:
+        pdf.drawString(400,180,'Subtotal: $')   
+        pdf.setFont('Helvetica', 9)
+        pdf.drawRightString(530,180,str(row[21]))
+
+    
+
+    # pdf.setFont('Helvetica-Bold', 9)
+    # pdf.drawString(400,140,'IVA 0%: $')
+    # pdf.setFont('Helvetica', 9)
+    # iva0 = str(row[36])
+    # pdf.drawRightString(530,140,iva0.replace(',','@').replace('.',',').replace('@','.'))
+
 
     pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(380,170,'IVA 27%: $')
+    pdf.drawString(400,130,'Importe Total: $')
     pdf.setFont('Helvetica', 9)
-    pdf.drawRightString(510,170,str(row[37]))
-
-    pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(380,160,'IVA 21%: $')
-    pdf.setFont('Helvetica', 9)
-    pdf.drawRightString(510,160,str(row[25]))
-
-
-    pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(380,150,'IVA 10.5%: $')
-    pdf.setFont('Helvetica', 9)
-    pdf.drawRightString(510,150,str(row[26]))
-
-
-    pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(380,140,'IVA 0%: $')
-    pdf.setFont('Helvetica', 9)
-    pdf.drawRightString(510,140,str(row[36]))
-
-
-    pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(380,130,'Importe Total: $')
-    pdf.setFont('Helvetica', 9)
-    pdf.drawRightString(510,130,str(row[21]))
+    tot = str(row[21])
+    pdf.drawRightString(530,130,  tot.replace(',','@').replace('.',',').replace('@','.'))
 
     # ###################################
     # 4) Text object :: for large amounts of text
@@ -378,15 +438,21 @@ def gen_pdf_fisc(id):
     fecha = str(data2[29]) 
     pdf.setFont('Helvetica', 9)
     pdf.drawString(480, 70, fecha[-2:]+'/'+fecha[-5:-3]+'/'+fecha[0:4])
-
-    pdf.drawString(200,70,'Comprobante Autorizado')
-    pdf.drawInlineImage(image, 60,55)
+    
+    #image = qr(id)
+    #pdf.drawString(200,70,'Comprobante Autorizado')
+    #LA FUNCION qr(id) DEVUELVE LA IMAGEN
+    pdf.drawInlineImage(qr(id), 60,55, width=120, height=120)
+    
+    #LOGO AFIP
+    afip = 'afip.png' 
+    pdf.drawInlineImage(afip, 200,70)
 
     pdf.save()
     lista = [fileHtml, email]
     return lista
 
-#gen_pdf_fisc(52)    
+#gen_pdf_fisc(7)    
 
 
 
@@ -497,7 +563,7 @@ def gen_pdf_int(id):
     pdf.drawString(60, 720, 'Fecha:')
     fecha = str(data2[20]) 
     pdf.drawString(105, 720, fecha[-2:]+'/'+fecha[-5:-3]+'/'+fecha[0:4])
-
+    
 
     # ###################################
     # 3) Draw a line
@@ -517,10 +583,10 @@ def gen_pdf_int(id):
     pdf.setFont('Helvetica', 8)
     pdf.drawString(55,637,'Código')
     pdf.drawString(160,637,'Descripción')
-    pdf.drawString(300,637,'Cantidad')
-    pdf.drawString(360,637,'Precio')
+    pdf.drawString(320,637,'Cantidad')
+    pdf.drawString(380,637,'Precio')
     # pdf.drawString(420,637,'IVA')
-    pdf.drawString(480,637,'Subtotal')
+    pdf.drawString(500,637,'Subtotal')
     pdf.line(50, 630, 550, 630)
 
     # # Cuit cliente
@@ -548,17 +614,17 @@ def gen_pdf_int(id):
     
     iva = 'Consumidor Final'    
          
-    if data2[68] == 1:
+    if data2[67] == 1:
         iva = 'Resp. Inscripto'
-    elif  data2[68] == 2:
+    elif  data2[67] == 2:
         iva = 'Resp. No Inscri.'
-    elif  data2[68] == 3:
+    elif  data2[67] == 3:
         iva = 'No Responsable' 
-    elif  data2[68] == 4:      
+    elif  data2[67] == 4:      
         iva = 'Exento' 
-    elif  data2[68] == 5:   
+    elif  data2[67] == 5:   
         iva = 'Consumidor Final'      
-    elif  data2[68] == 6:   
+    elif  data2[67] == 6:   
         iva = 'Resp.Monotributo'     
 
     pdf.setFont('Helvetica', 9)
@@ -579,10 +645,10 @@ def gen_pdf_int(id):
     for row in data:
         pdf.drawString(55,y,row[72])
         pdf.drawString(100,y,row[55])
-        pdf.drawRightString(320,y,str(row[59])) 
-        pdf.drawRightString(380,y,str(row[57]))
+        pdf.drawRightString(340,y,str(row[59])) 
+        pdf.drawRightString(400,y,str(row[57]))
         # pdf.drawRightString(440,y,str(row[55]))
-        pdf.drawRightString(510,y,str((row[57])))
+        pdf.drawRightString(530,y,str((row[57])))
         y = y - 10
 
     ########################
@@ -592,13 +658,13 @@ def gen_pdf_int(id):
     pdf.line(50, 110, 550, 110)
 
     pdf.setFont('Helvetica-Bold', 12)
-    pdf.drawString(380,80,'Importe Total: $')
+    pdf.drawString(400,80,'Importe Total: $')
     pdf.setFont('Helvetica', 12)
-    pdf.drawRightString(510,80,str(data2[21]))
+    pdf.drawRightString(530,80,str(data2[21]))
 
 
     pdf.save()
     lista = [fileHtml, email]
     return lista
 
-#gen_pdf_int(45)
+# gen_pdf_int(1)
