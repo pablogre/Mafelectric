@@ -1,7 +1,7 @@
 from flask import Blueprint,Flask, render_template, request, redirect, url_for, flash, session
 from Resumenes import *
 from random import randint
-from Conexion import conexion
+from Conexion import *
 from mail import send_mail
 from datetime import datetime, date
 from pdfExample import gen_pdf_int,gen_pdf_fisc,gen_pdf_reci
@@ -37,27 +37,27 @@ def val_log():
         clave = request.form['clave']    
         print(cuit)
         print(clave)
-        connection=conexion()
-        cur = connection.cursor()
+        #connection=conexion()
+        #cur = connection.cursor()
         query = 'select * from empresas where cuit = %s and clave = %s'
         params = [cuit, clave]
-        cur.execute(query,params)
-        data = cur.fetchone()
+        data = sql(query,params)
+        #cur.execute(query,params)
+        #data = cur.fetchone()
         print(data)
-        connection.commit()
-        cur.close
-        connection.close()
-        if data is None:
-            flash('Sus Datos No Estan Registrados')    
-            return render_template('login.html')
-
-        else:
-            session['id_empresa'] = data[0]
-            session['razon_soc'] = data[1]
+        #connection.commit()
+        #cur.close
+        #connection.close()
+        if data:
+            session['id_empresa'] = data[0][0]
+            session['razon_soc'] = data[0][1]
             session['usuario'] = randint(0, 100000)
            
             #return render_template('mensaje.html',mensaje='A FAVOR DE LEANDRO...' )   
             return render_template('factufacil.html')
+        else:
+            flash('Sus Datos No Estan Registrados')    
+            return render_template('login.html')
 
 @app.route('/menu', methods = ['GET','POST'])
 def menu():
@@ -1008,14 +1008,13 @@ def val_mp(t_mp, t_fa, id_cliente):
                 while cont01 < 4 :
                     time.sleep(3) ## detiene el sistema 3 segundos              				
                     #verifico si proceso la fact. electronica
-                    connection=conexion()
                     cur = connection.cursor()              
                     query = "select obs from  factura_tmp  where id_empresa = %s and usuario = %s limit 1"
                     params = [id_empresa, usuario]
                     cur.execute(query, params)
                     data = cur.fetchone()
                     cur.close()
-                    connection.close()
+                   
                     print(data)
                     if not data is None:  #Quiere decir el registro de factura_tmp sigue alli
                         print('entre por not is none ')
@@ -1044,7 +1043,7 @@ def val_mp(t_mp, t_fa, id_cliente):
 
                 #select dela factura con id_empresa,id_usuario,bandera
                 #si encuentra {genera pdf etc..} idfactura_letra_puerto_numero.pdf
-                connection=conexion()
+
                 cur = connection.cursor()
                 query = "select id_factura from facturas where bandera = %s and  id_empresa = %s and usuario = %s"
 
@@ -1064,7 +1063,7 @@ def val_mp(t_mp, t_fa, id_cliente):
                     email = data1[1]
                     return render_template('ver_comp.html', fileName= fileName, email = email)    
                 else:
-                    return    
+                    return render_template('login.html') 
 
                 
                 #else     
@@ -1160,13 +1159,13 @@ def ver_fact():
         tipo = request.form['tipo']
         print('id_factura:', id_factura)
         print('tipo:', tipo)
-        connection=conexion()
-        cur = connection.cursor()
+        
         filename  = ''
         email = '' 
         if tipo == 'REC':
             query = "select m_pago, obser, concat('REC ','00001-',lpad(recibos.numero,8,'0')) as nro, total, id  from recibos where id = %s"
         else:
+    
             data1 = gen_pdf_fisc( id_factura )
             if data1:
                 print(data1)
@@ -1183,6 +1182,8 @@ def ver_fact():
                     left join facturas on facturas.id_factura = factura_items.id_factura
                     where factura_items.id_factura = %s
                     '''
+        connection=conexion()
+        cur = connection.cursor()
         params = [id_factura]
         cur.execute(query, params)
         data = cur.fetchall()

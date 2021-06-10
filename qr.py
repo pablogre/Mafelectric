@@ -16,17 +16,24 @@ connection=conexion()
 
 def qr(id):
     #id de la factura
+    print('id de la fact.:',id)
+    # Connection
+    connection = conexion()
     query = '''
         SELECT f.fecha,e.cuit,f.puerto,f.cod_afip,f.numero,f.total,f.dni,f.cae
 		from facturas f,empresas e
         WHERE  e.id_empresa=f.id_empresa and f.id_factura=%s 
         '''
     cur = connection.cursor()
-    data=()
+    #data=()
     params = [id]
     cur.execute(query,params)
     data = cur.fetchall()
     cur.close
+    connection.close()
+
+    print('DATA:',data)
+
     data2 = data[0]
 	#DNI
     if data2[6] > 20000000000 :

@@ -8,8 +8,7 @@ import datetime
 import os
 import pymysql.cursors 
 
-# Connection
-connection = conexion()
+
 
 fileName = ''
 email = ''
@@ -50,7 +49,9 @@ def gen_pdf_reci(id):
 def gen_pdf_fisc(id):
     # ###################################
     # TRAIGO LOS DATOS
-    cur = connection.cursor()
+    # Connection
+    conn = conexion()
+    cur = conn.cursor()
     data=()
     query = '''
             select empresas.*, facturas.*, factura_items.*, clientes.* , articulos.codigo
@@ -65,6 +66,8 @@ def gen_pdf_fisc(id):
     cur.execute(query,params)
     data = cur.fetchall()
     cur.close
+    conn.close()
+
 
     print(data)
     
@@ -450,9 +453,10 @@ def gen_pdf_fisc(id):
 
     pdf.save()
     lista = [fileHtml, email]
+    
     return lista
 
-#gen_pdf_fisc(7)    
+#gen_pdf_fisc(85)    
 
 
 
@@ -472,7 +476,9 @@ def gen_pdf_fisc(id):
 def gen_pdf_int(id):
     # ###################################
     # TRAIGO LOS DATOS
-    cur = connection.cursor()
+    # Connection
+    conn = conexion()
+    cur = conn.cursor()
     data=()
     query = '''
             select empresas.*, facturas.*, factura_items.*, clientes.* , articulos.codigo
@@ -487,7 +493,7 @@ def gen_pdf_int(id):
     cur.execute(query,params)
     data = cur.fetchall()
     cur.close
-
+    conn.close()
 
     # CARGO LA LISTA DE DATOS
     data2 = data[0]
@@ -665,6 +671,7 @@ def gen_pdf_int(id):
 
     pdf.save()
     lista = [fileHtml, email]
+
     return lista
 
 # gen_pdf_int(1)
