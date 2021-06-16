@@ -117,13 +117,15 @@ def clientes():
         filtro = filtro + request.form['buscar'].strip()+filtro
 
     cur = connection.cursor()
-    #query = 'SELECT * FROM clientes where cliente like %s and id_empresa = %s order by cliente'
     query = '''
             select c.*, 
             SUM(ifnull(d.debe,0.00) - ifnull(d.haber,0.00)) as saldo 
             from clientes c
             inner JOIN (
-                select b.id_cliente as clie, sum(importe) as debe , 0 as haber,b.id_empresa 
+                select b.id_cliente as clie, sum(
+                 case when b.id_tipo_comp=3 then importe * -1
+                 else importe end 
+                ) as debe , 0 as haber,b.id_empresa 
                 from facturas_mpagos a 
                 inner join facturas b on a.id_factura=b.id_factura where a.m_pago='CTA-CTE.' 
                 group by b.id_cliente, b.id_empresa
@@ -136,13 +138,13 @@ def clientes():
             on  d.clie=c.id and c.id_empresa=d.id_empresa
             where c.cliente like %s and c.id_empresa = %s and d.id_empresa = c.id_empresa and d.clie = c.id
             group by c.id 
-            order by c.cliente            
+            order by c.cliente
             '''
     params=[filtro, id_empresa]
     cur.execute(query, params)
     data = cur.fetchall()
     cur.close()
-    
+            
     session['clientes_sel'] = 0
     connection.close()
 
