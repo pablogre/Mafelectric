@@ -1,4 +1,4 @@
-from flask import Blueprint,Flask, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint,Flask, render_template, request, redirect, url_for, flash, session, jsonify
 from Resumenes import *
 from random import randint
 from Conexion import *
@@ -9,6 +9,7 @@ import time
 import datetime
 import os
 import pymysql.cursors 
+import json
 
 app = Flask(__name__,static_url_path='/static')
 app.register_blueprint(resumenes)
@@ -26,6 +27,10 @@ app.secret_key = "Secret Key"
 def login():
     return render_template('login.html')
 
+@app.route('/login_taller') 
+def login_taller():
+    return render_template('login_taller.html')
+
 
 @app.route('/val_log', methods=['GET','POST'])
 def val_log():
@@ -37,27 +42,54 @@ def val_log():
         clave = request.form['clave']    
         print(cuit)
         print(clave)
-        #connection=conexion()
-        #cur = connection.cursor()
+        con=conexion()
+        cur = con.cursor()
         query = 'select * from empresas where cuit = %s and clave = %s'
         params = [cuit, clave]
         data = sql(query,params)
-        #cur.execute(query,params)
-        #data = cur.fetchone()
-        print(data)
-        #connection.commit()
-        #cur.close
+        cur.execute(query,params)
+        data = cur.fetchone()
+        print('data:',data)
+        cur.close
         #connection.close()
         if data:
-            session['id_empresa'] = data[0][0]
-            session['razon_soc'] = data[0][1]
+            session['id_empresa'] = data[0]
+            session['razon_soc'] = data[1]
             session['usuario'] = randint(0, 100000)
-           
+            session['us_ta'] = 'admin'
+            session['nivel_ta'] = 'admin'
+            
             #return render_template('mensaje.html',mensaje='A FAVOR DE LEANDRO...' )   
-            return render_template('factufacil.html')
+            #return render_template('factufacil.html')
+            return redirect(url_for('login_ok'))
         else:
             flash('Sus Datos No Estan Registrados')    
             return render_template('login.html')
+
+@app.route('/login_ok', methods=['GET','POST'])
+def login_ok():
+     return render_template('factufacil.html')
+
+
+@app.route('/val_log_taller', methods=['GET','POST'])
+def val_log_taller():
+    if request.method == 'POST':
+        us_ta = request.form['ta_usuario']
+        clave_ta = request.form['ta_clave']
+        con = conexion()
+        cur = con.cursor()
+        query = "select * from usuarios where usuario = %s and password = %s"
+        params = [us_ta, clave_ta]
+        cur.execute(query,params)
+        data = cur.fetchall()
+        session['nivel_ta'] = ""
+        if data:
+            session['us_ta'] = us_ta
+            session['clave_ta'] = clave_ta
+            session['nivel_ta'] = data[0][3]
+            session['id_usu_ta'] = data[0][0]
+            return redirect(url_for('ver_trabajos'))
+
 
 @app.route('/menu', methods = ['GET','POST'])
 def menu():
@@ -929,9 +961,10 @@ def val_mp(t_mp, t_fa, id_cliente):
                 
                 # print('Inserto en facturas')
                 #Inserto en facturas
+                # Cuando grabas un INTERNO Tenes poner en FACTURAS.tipo_comp va en cero y FACTURAS.id_tipo_comp=4
                 cur = connection.cursor()
-                query = "insert into facturas (id_cliente, fecha, total, puerto, numero, id_empresa, tipo_comp, letra, dni, cliente) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-                params = [id_cliente, fecha, total , puerto, numero, id_empresa, tipo_comp, letra, dni, cliente]
+                query = "insert into facturas (id_cliente, fecha, total, puerto, numero, id_empresa, tipo_comp, letra, dni, cliente, id_tipo_comp) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+                params = [id_cliente, fecha, total , puerto, numero, id_empresa, 0, letra, dni, cliente, 4]
                 cur.execute(query, params)
                 connection.commit()
                 
@@ -1023,7 +1056,7 @@ def val_mp(t_mp, t_fa, id_cliente):
                         if (data[0]) =='':
                             print('sume 1 ')
                            
-                            #quiere decir que la quiere decir que no hay nada en observaciones..entonces puede que tarde en pasar ..vuelvo a intetar
+                            #quiere decir  que no hay nada en observaciones..entonces puede que tarde en pasar ..vuelvo a intetar
                             cont01+=1                            
                         else: #quiere decir que hay algun menseje para mostrar de afip lo mando
                             cont01=17 #fuerzo la salida proque hay error
@@ -1111,10 +1144,10 @@ def cta_cte(id):
     params = [id]
     cur.execute(query, params)
     cliente = cur.fetchall()
-
-    # saldo ant
+    print(cliente)
+    # saldo ant  select ifnull(sum(facturas_mpagos.importe),0)- (select ifnull(sum(recibos.total),0)  from recibos 
     query = '''
-                select ifnull(sum(facturas_mpagos.importe),0)- (select ifnull(sum(recibos.total),0)  from recibos 
+                select ifnull(sum(case when facturas.id_tipo_comp = 3 then facturas_mpagos.importe * -1 else facturas_mpagos.importe end),0) - (select ifnull(sum(recibos.total),0)  from recibos 
                 where id_cliente = %s and recibos.fecha < %s and id_empresa = %s) as rec, facturas.id_cliente 
                 from facturas_mpagos 
                 left join facturas on facturas.id_factura = facturas_mpagos.id_factura 
@@ -1123,6 +1156,7 @@ def cta_cte(id):
     params = [id, desde, id_empresa, id, desde, id_empresa]
     cur.execute(query, params)
     ant = cur.fetchall()
+    print(ant)
 
     # movimientos
     query = '''
@@ -1131,6 +1165,7 @@ def cta_cte(id):
             concat(CASE WHEN facturas.id_tipo_comp = 1 THEN 'FC '
             WHEN facturas.id_tipo_comp = 2 THEN 'ND '
             WHEN facturas.id_tipo_comp = 3 THEN 'NC '
+            WHEN facturas.id_tipo_comp = 4 THEN 'IN '
             END  ,  facturas.letra,' ',lpad(facturas.puerto,5,'0'),'-',lpad(facturas.numero,8,'0')) as nro,
             case when facturas.id_tipo_comp = 3 then facturas_mpagos.importe * -1
             else facturas_mpagos.importe end, facturas.id_factura,facturas.id_cliente,facturas.id_empresa
@@ -1150,6 +1185,8 @@ def cta_cte(id):
     data = cur.fetchall()
     cur.close()
     connection.close()
+
+    print(data)
     return render_template('cta_cte.html', ctacte = data, sal_ant=ant, desde=desde.strftime("%Y-%m-%d"), hasta=hasta.strftime("%Y-%m-%d"), id=id, cliente = cliente)
 
 
@@ -1167,8 +1204,11 @@ def ver_fact():
         if tipo == 'REC':
             query = "select m_pago, obser, concat('REC ','00001-',lpad(recibos.numero,8,'0')) as nro, total, id  from recibos where id = %s"
         else:
-    
-            data1 = gen_pdf_fisc( id_factura )
+            if tipo == 'IN ':
+                data1 = gen_pdf_int( id_factura )
+            else:
+                data1 = gen_pdf_fisc( id_factura )
+                
             if data1:
                 print(data1)
                 filename  = data1[0]
@@ -1178,6 +1218,7 @@ def ver_fact():
                     select DATE_FORMAT(facturas.fecha, '%%d/%%m/%%Y') as fecha, concat(CASE WHEN facturas.id_tipo_comp = 1 THEN 'FC '
                     WHEN facturas.id_tipo_comp = 2 THEN 'NC '
                     WHEN facturas.id_tipo_comp = 3 THEN 'ND '
+                    WHEN facturas.id_tipo_comp = 4 THEN 'IN '
                     END  ,  facturas.letra,' ',lpad(facturas.puerto,5,'0'),'-',lpad(facturas.numero,8,'0')) as nro,
                     factura_items.articulo, factura_items.cantidad, factura_items.dto, factura_items.precio, factura_items.id_factura 
                     from factura_items 
@@ -1271,6 +1312,173 @@ def salir():
     session.clear()
     return redirect(url_for('login'))    
 
+
+@app.route('/o_trabajos/<id_clie>', methods = ['GET','POST'] )
+def o_trabajos(id_clie):
+    connection=conexion()
+    cur = connection.cursor()
+    query = '''select id_ot, fecha, descrip, estado, fecha_entrega, estimado from o_trabajos 
+                where id_clie = %s order by fecha desc'''
+
+    params = [id_clie]
+    cur.execute(query, params)
+    data = cur.fetchall()
+    cur.close()
+    
+    cur = connection.cursor()
+    query = 'select cliente, telefonos, email, id from clientes where id = %s'
+    cur.execute(query, params)
+    cliente = cur.fetchall()
+    cur.close()
+
+    cur = connection.cursor()
+    query = 'select * from estados'
+    cur.execute(query)
+    estados = cur.fetchall()
+    cur.close()
+
+    connection.close()
+
+    return render_template('o_trabajos.html', data=data, cliente=cliente, estados = estados)    
+
+@app.route('/abm_otrab', methods = ['GET','POST'] )
+def abm_otrab():
+    if request.method == 'POST':
+        id_ot = request.form['id_ot']
+        id_clie = request.form['id_clie']
+        descrip = request.form['descrip']
+        estado = request.form['estado']
+        estimado = request.form['estimado']
+        fecha_entrega =  request.form['fecha_e'].strip()
+       
+        connection=conexion()
+        cur = connection.cursor()
+        if str(id_ot) == '0':
+            fecha1 = request.form['fecha_i'].strip()   
+            fecha = fecha1[6:10]+'/'+fecha1[3:5]+'/'+fecha1[0:2] + ' '+fecha1[-8:]
+            print('fecha1:',fecha1)     
+            query = "insert into o_trabajos (id_clie, fecha, descrip, estado, estimado) values(%s,%s,%s,%s,%s)"
+            params = [id_clie, fecha1, descrip, estado, estimado]
+        else:
+            fecha = request.form['fecha_i'].strip() 
+            fecha_entrga = request.form['fecha_e'].strip() 
+            print('fecha:',fecha)
+            print('fecha_entrega:',fecha_entrega)
+            query = "update o_trabajos set fecha = %s, descrip = %s, fecha_entrega = %s, estado = %s, estimado = %s where id_ot = %s"
+            params = [fecha, descrip, fecha_entrega, estado, estimado, id_ot]    
+        cur.execute(query,params)
+        connection.commit()
+        cur.close()
+        jok = {"type": "ok", "status":200  }
+        return jsonify(jok) 
+
+
+@app.route('/abm_ftrab', methods = ['GET','POST'] )
+def abm_ftrab():
+    if request.method == 'POST':
+        id_clie = request.form['id_clie']
+        fecha = request.form['fecha'].strip()
+        hs_trab = request.form['hs_trab']
+        estado = request.form['estado']
+        desc_job = request.form['desc_job']
+        id_ot =  request.form['id_ot']
+        id_job =  request.form['id_job']
+        print('fecha:',fecha)
+        connection=conexion()
+        cur = connection.cursor()
+        if str(id_job) == '0':
+            fecha1 = request.form['fecha'].strip()   
+            #fecha = fecha1[6:10]+'/'+fecha1[3:5]+'/'+fecha1[0:2] + ' '+fecha1[-8:]
+            #print('fecha1:',fecha1)     
+            query = "insert into trabajos (id_clie, fecha, hs_trab, estado, desc_job, id_ot, id_job) values(%s,%s,%s,%s,%s,%s,%s)"
+            params = [id_clie, fecha1, hs_trab, estado, desc_job, id_ot, id_job]
+        else:
+            fecha = request.form['fecha'].strip() 
+            print('fecha:',fecha)
+            query = "update trabajos set fecha = %s, desc_job = %s, estado = %s, hs_trab = %s where id_ot = %s"
+            params = [fecha, desc_job, estado, hs_trab, id_ot]    
+        cur.execute(query,params)
+        connection.commit()
+        cur.close()
+        jok = {"type": "ok", "status":200  }
+        return jsonify(jok)
+
+
+@app.route('/edit_otrab', methods = ['GET','POST'] )
+def edit_otrab():
+    if request.method == 'POST':
+        connection=conexion()
+        cur = connection.cursor()
+        id_ot = request.form['id_ot']
+         
+        params = [id_ot]
+        cur.execute(query,params)
+        data = cur.fetchall()
+        print(data)
+        jok = {"type": "ok", "data": data}
+        return jsonify(jok) 
+
+
+@app.route('/ver_trabajos', methods = ['GET'] )
+def ver_trabajos():
+    estado = ''
+    
+    estado =  request.args.get('estado')
+    #recibir paramtro get de la url
+
+    connection=conexion()
+    cur = connection.cursor()
+    if estado:
+        print('Estado:', estado)
+        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos from o_trabajos
+                   left join clientes on clientes.id = o_trabajos.id_clie
+                   where estado = %s  order by fecha desc'''
+        params=[estado]
+        cur.execute(query, params)
+        data = cur.fetchall()
+        cur.close()        
+    else:
+        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos from o_trabajos
+                   left join clientes on clientes.id = o_trabajos.id_clie
+                   where estado != 'ENTREGADO'  order by fecha desc'''
+        cur.execute(query)
+        data = cur.fetchall()
+        cur.close()
+    
+    cur = connection.cursor()
+    query = 'select * from estados'
+    cur.execute(query)
+    estados = cur.fetchall()
+    cur.close()
+
+    connection.close()
+    nivel_ta = session['nivel_ta']
+    print(nivel_ta)
+    if estado:
+        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado)
+    else:
+        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado)
+
+@app.route('/ver_fichas_trabajos/<id_ot>', methods = ['GET','POST'] )
+def ver_fichas_trabajos(id_ot):
+    connection=conexion()
+    cur = connection.cursor()
+    query = '''select id_ot, desc_job, hs_trab, id_job, id_clie, estado, fecha from trabajos 
+               where id_ot = %s  order by fecha desc'''
+    params = [id_ot]
+    cur.execute(query, params)
+    data = cur.fetchall()
+    cur.close()
+    
+    cur = connection.cursor()
+    query = 'select * from estados'
+    cur.execute(query)
+    estados = cur.fetchall()
+    cur.close()
+
+    connection.close()
+    print(data)
+    return render_template('ver_fichas_trabajos.html', data=data, estados = estados, id_ot = id_ot)    
 
 
 if __name__ == "__main__":

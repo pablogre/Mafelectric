@@ -324,7 +324,7 @@ def gen_pdf_fisc(id):
         pdf.drawString(55,y,row[72])
         
         #Descripción del art.
-        pdf.setFont('Helvetica', 8)
+        pdf.setFont('Helvetica', 7)
         largo = len(row[55])
         desc = row[55]
         ini = fin = 0
@@ -337,6 +337,7 @@ def gen_pdf_fisc(id):
         #pdf.drawString(80,y,row[55])
 
         #Cant.
+        pdf.setFont('Helvetica', 8)
         cant = str(row[59])
         pdf.drawRightString(340,y,cant.replace(',','@').replace('.',',').replace('@','.'))
 
@@ -605,7 +606,7 @@ def gen_pdf_int(id):
 
     pdf.setFont('Helvetica', 9)
     if data2[66] != None:
-        pdf.drawString(90, 685, data2[67])
+        pdf.drawString(90, 685, data2[66])
     
     # Razón Social del cliente
     pdf.setFont('Helvetica-Bold', 9)
@@ -649,14 +650,25 @@ def gen_pdf_int(id):
     x = 55
     y = 620
     for row in data:
+        #Código
         pdf.drawString(55,y,row[72])
-        pdf.drawString(100,y,row[55])
+        #Descripción del art.
+        pdf.setFont('Helvetica', 8)
+        largo = len(row[55])
+        desc = row[55]
+        ini = fin = 0
+        while ini <= largo:
+            fin = fin + 60
+            pdf.drawString(80,y,desc[ini:fin])
+            ini = ini + 60
+            if largo > ini:
+                y = y - 10
+       # pdf.drawString(100,y,row[55])
         pdf.drawRightString(340,y,str(row[59])) 
         pdf.drawRightString(400,y,str(row[57]))
         # pdf.drawRightString(440,y,str(row[55]))
         pdf.drawRightString(530,y,str((row[57])))
         y = y - 10
-
     ########################
     #Pie de comprobante
     ########################
@@ -674,4 +686,4 @@ def gen_pdf_int(id):
 
     return lista
 
-# gen_pdf_int(1)
+#gen_pdf_int(98)

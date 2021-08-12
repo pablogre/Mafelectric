@@ -1,0 +1,148 @@
+{% extends "layout.html" %} 
+{% block body %}
+<br>
+<div class="container">
+    <div class="row">
+        <div class="col-md-12" style="display: flex; justify-content: space-between;">
+            <h3>Fichas de Trabajos</h3>
+            <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#mymodal">Nuevo</button>
+        </div>
+    </div>
+    <br>
+    {% for row in data%}
+    <!--select id_ot, fecha, descrip, estado, fecha_entrega, estimado from o_trabajos -->
+    <div class="jumbotron p-3" >
+        <div class="row">       
+            <div class="form-group col-md-2">
+                <label for="id_ot" class="control-label">Ord. de Trabajo </label>
+                <input type="text" class="form-control"  value="{{row.0}}" disabled>
+            </div> 
+            <div class="form-group col-md-3">
+                <label for="fecha" class="control-label">Fecha </label>
+                <input type="text" class="form-control"  value="{{row.6}}" disabled>
+            </div> 
+            <div class="form-group col-md-2">
+                <label for="hs_trab" class="control-label">Hs. Trabajadas </label>
+                <input type="number" class="form-control"  value="{{row.2}}" disabled>
+            </div> 
+            <div class="form-group col-md-3"> 
+                <label for="id_ot" class="control-label">Estado </label>
+                <input type="text" class="form-control"  value="{{row.5}}" disabled>
+            </div> 
+           
+        </div> 
+        
+        <div class="row">
+            <div class="col-md-12">
+                <textarea class="form-control rounded-1" id="otros" name="otros" rows="5" cols="60" placeholder="Ingrese descripción del problema" disabled>{{row.1}}</textarea>
+            </div>
+           
+        </div> 
+    </div> 
+    {% endfor %} 
+</div>
+
+
+<!-- Modal Add  -->
+<div id="mymodal" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Nueva Ficha</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="form-group col-md-3">
+                        <label for="id_ot" class="control-label">Ord. de Trabajo </label>
+                        <input type="text" class="form-control" id="id_ot" value="{{id_ot}}" disabled>
+                    </div>
+                    <div class="form-group col-md-4">
+                        <label for="fecha" class="control-label">Fecha </label>
+                        <input type="datetime-local" name="fecha" id="fecha" class="form-control">
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="hs_trab" class="control-label">Hs. de Trabajo </label>
+                        <input type="number" class="form-control" name="hs_trab" id="hs_trab" min="0" value="0">
+                    </div>
+                    <div class="form-group col-md-3"> 
+                        <label for="estado" class="control-label">Estado </label>
+                        <select id="estado" class="form-control">
+                            {% if estados %} 
+                               <option value="" selected disabled>Seleccione:</option>
+                                {% for estado in estados %}
+                                    <option value="{{estado.1}}">{{estado.1}}</option>
+                                {% endfor %}
+                            {% endif %}    
+                        </select>
+                    </div>
+                    <div class="form-group col-md-3">
+                        <input type="text" id="id_clie" class="form-control"  value="{{data.4}}" hidden>
+                    </div> 
+                    <div class="form-group col-md-3">
+                        <input type="text" id="id_job" class="form-control"  value="0" hidden>
+                    </div> 
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <textarea class="form-control rounded-1" id="desc_job"  rows="5" cols="60" placeholder="Ingrese descripción del trabajo realizado" ></textarea>
+                    </div>   
+            </div>  
+            <div class="modal-footer">
+                <button class="guardar btn btn-primary" type="submit">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+$('#mymodal .guardar').on('click', function() {
+    
+    if($('#fecha').val()==='') {
+        swal("Ingrese la feecha y hora !", "", "warning");
+        return
+    }
+    if($('#hs_trab').val()==='') {
+        swal("Ingrese las Horas Trabajadas !", "", "warning");
+        return
+    }
+    if($('#estimado').val()==='0') {
+        swal("Ingrese el Tiempo Estimado de Reparación !", "", "warning");
+        return
+    }
+    if($('#desc_job').val()==='') {
+        swal("Ingrese descripción del Trabajo Realizado !", "", "warning");
+        return
+    }
+    
+    let datos = {
+        id_clie: $('#id_clie').val(),
+        fecha: $('#fecha').val(),
+        hs_trab: $('#hs_trab').val(),
+        estado: $('#estado').val(),
+        desc_job: $('#desc_job').val(),
+        id_ot: $('#id_ot').val(),
+        id_job: $('#id_job').val()
+    }
+   
+    $.ajax({
+        url: "../abm_ftrab",
+        type: "POST",
+        data: datos,
+        success: function(data) {
+            console.log('Data: '+data)
+            if (data.type == 'ok') {
+                location.reload()
+            }
+        },
+        error: function() {
+            alert('ERROR,  CAGASTE FUEGO')
+        }
+    });
+})
+</script>
+{% endblock %}
