@@ -74,6 +74,18 @@ def login_ok():
 @app.route('/val_log_taller', methods=['GET','POST'])
 def val_log_taller():
     if request.method == 'POST':
+        con=conexion()
+        cur = con.cursor()
+        query = 'select * from empresas'
+        cur.execute(query)
+        data = cur.fetchone()
+        print('data:',data)
+        cur.close
+        if data:
+            session['id_empresa'] = data[0]
+            session['razon_soc'] = data[1]
+            session['usuario'] = randint(0, 100000)
+           
         us_ta = request.form['ta_usuario']
         clave_ta = request.form['ta_clave']
         con = conexion()
@@ -89,7 +101,8 @@ def val_log_taller():
             session['nivel_ta'] = data[0][3]
             session['id_usu_ta'] = data[0][0]
             return redirect(url_for('ver_trabajos'))
-
+        else:
+            return redirect(url_for('login_taller'))
 
 @app.route('/menu', methods = ['GET','POST'])
 def menu():
@@ -1268,19 +1281,41 @@ def insert_mp2(id):
         connection.close()
         return redirect(url_for('cta_cte',id=id))
 
-
-@app.route('/delete_reci/<id_fac>/<id_clie>', methods = ['GET','POST'] )
-def delete_reci(id_fac,id_clie):
+@app.route('/delete_reci/<id_fac>/<id_clie>/<comp>', methods = ['GET','POST'] )
+def delete_reci(id_fac,id_clie,comp):
     if request.method == 'POST':
-        connection=conexion()
-        cur = connection.cursor()
-        query = "delete from recibos where id = %s"
-        params = [id_fac]
-        cur.execute(query, params)
-        connection.commit()
-        cur.close()
-        connection.close()
+        if comp[0:3] == 'REC':
+            connection=conexion()
+            cur = connection.cursor()
+            query = "delete from recibos where id = %s"
+            params = [id_fac]
+            cur.execute(query, params)
+            connection.commit()
+            cur.close()
+            connection.close()
+        elif comp[0:2] == 'IN':
+            connection=conexion()
+            cur = connection.cursor()
+            query = "delete from facturas where id_factura = %s"
+            params = [id_fac]
+            cur.execute(query, params)
+            connection.commit()
+           
+            query = "delete from factura_items where id_factura = %s"
+            params = [id_fac]
+            cur.execute(query, params)
+            connection.commit()
+
+            query = "delete from facturas_mpagos where id_factura = %s"
+            params = [id_fac]
+            cur.execute(query, params)
+            connection.commit()
+            cur.close()
+            connection.close()
+
+
         return redirect(url_for('cta_cte',id=id_clie))
+
 
 
 @app.route('/envio_mail', methods = ['GET','POST'] )
@@ -1317,7 +1352,7 @@ def salir():
 def o_trabajos(id_clie):
     connection=conexion()
     cur = connection.cursor()
-    query = '''select id_ot, fecha, descrip, estado, fecha_entrega, estimado from o_trabajos 
+    query = '''select id_ot, fecha, descrip, estado, fecha_entrega, estimado, importe from o_trabajos 
                 where id_clie = %s order by fecha desc'''
 
     params = [id_clie]
@@ -1350,6 +1385,7 @@ def abm_otrab():
         estado = request.form['estado']
         estimado = request.form['estimado']
         fecha_entrega =  request.form['fecha_e'].strip()
+        importe = request.form['importe']
        
         connection=conexion()
         cur = connection.cursor()
@@ -1357,15 +1393,15 @@ def abm_otrab():
             fecha1 = request.form['fecha_i'].strip()   
             fecha = fecha1[6:10]+'/'+fecha1[3:5]+'/'+fecha1[0:2] + ' '+fecha1[-8:]
             print('fecha1:',fecha1)     
-            query = "insert into o_trabajos (id_clie, fecha, descrip, estado, estimado) values(%s,%s,%s,%s,%s)"
-            params = [id_clie, fecha1, descrip, estado, estimado]
+            query = "insert into o_trabajos (id_clie, fecha, descrip, estado, estimado, importe) values(%s,%s,%s,%s,%s,%s)"
+            params = [id_clie, fecha1, descrip, estado, estimado, importe]
         else:
             fecha = request.form['fecha_i'].strip() 
             fecha_entrga = request.form['fecha_e'].strip() 
             print('fecha:',fecha)
             print('fecha_entrega:',fecha_entrega)
-            query = "update o_trabajos set fecha = %s, descrip = %s, fecha_entrega = %s, estado = %s, estimado = %s where id_ot = %s"
-            params = [fecha, descrip, fecha_entrega, estado, estimado, id_ot]    
+            query = "update o_trabajos set fecha = %s, descrip = %s, fecha_entrega = %s, estado = %s, estimado = %s, importe = %s where id_ot = %s"
+            params = [fecha, descrip, fecha_entrega, estado, estimado, importe, id_ot]    
         cur.execute(query,params)
         connection.commit()
         cur.close()
@@ -1392,17 +1428,51 @@ def abm_ftrab():
             #print('fecha1:',fecha1)     
             query = "insert into trabajos (id_clie, fecha, hs_trab, estado, desc_job, id_ot, id_job) values(%s,%s,%s,%s,%s,%s,%s)"
             params = [id_clie, fecha1, hs_trab, estado, desc_job, id_ot, id_job]
+            cur.execute(query,params)
+            connection.commit()
+            
         else:
             fecha = request.form['fecha'].strip() 
             print('fecha:',fecha)
             query = "update trabajos set fecha = %s, desc_job = %s, estado = %s, hs_trab = %s where id_ot = %s"
-            params = [fecha, desc_job, estado, hs_trab, id_ot]    
+            params = [fecha, desc_job, estado, hs_trab, id_ot]  
+            cur.execute(query,params)
+            connection.commit()
+
+        #Fecha actual
+        fecha = date.today()  
+        usu_x = session['us_ta']
+        print('usuario:', usu_x)
+        query = "update o_trabajos set descrip = concat(descrip , chr(13), fecha, '-->' , %s , ' :' , %s), estado = %s where id_ot = %s"
+        params = [usu_x, desc_job, estado, id_ot]  
+        cur.execute(query,params)
+        connection.commit()
+        cur.close()    
+
+        
+        jok = {"type": "ok", "status":200  }
+        return jsonify(jok)
+
+
+@app.route('/abm_admin_ftrab', methods = ['GET','POST'] )
+def abm_admin_ftrab():
+    if request.method == 'POST':
+        estado = request.form['estado']
+        id_ot =  request.form['id_ot']
+        importe =  request.form['importe']
+        connection=conexion()
+        cur = connection.cursor()
+        if str(id_ot) == '0':     
+            query = "insert into o_trabajos (estado, id_ot, importe) values(%s,%s,%s)"
+            params = [estado, id_ot, importe]
+        else:
+            query = "update o_trabajos set estado = %s, importe = %s where id_ot = %s"
+            params = [estado, importe, id_ot]    
         cur.execute(query,params)
         connection.commit()
         cur.close()
         jok = {"type": "ok", "status":200  }
         return jsonify(jok)
-
 
 @app.route('/edit_otrab', methods = ['GET','POST'] )
 def edit_otrab():
@@ -1410,7 +1480,21 @@ def edit_otrab():
         connection=conexion()
         cur = connection.cursor()
         id_ot = request.form['id_ot']
-         
+        query = "select * from o_trabajos where id_ot = %s"
+        params = [id_ot]
+        cur.execute(query,params)
+        data = cur.fetchall()
+        print(data)
+        jok = {"type": "ok", "data": data}
+        return jsonify(jok) 
+
+@app.route('/edit_admin_ftrab', methods = ['GET','POST'] )
+def edit_admin_ftrab():
+    if request.method == 'POST':
+        connection=conexion()
+        cur = connection.cursor()
+        id_ot = request.form['id_ot']
+        query = "select id_ot, estado, importe from o_trabajos where id_ot = %s"
         params = [id_ot]
         cur.execute(query,params)
         data = cur.fetchall()
@@ -1430,7 +1514,7 @@ def ver_trabajos():
     cur = connection.cursor()
     if estado:
         print('Estado:', estado)
-        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos from o_trabajos
+        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe from o_trabajos
                    left join clientes on clientes.id = o_trabajos.id_clie
                    where estado = %s  order by fecha desc'''
         params=[estado]
@@ -1438,7 +1522,7 @@ def ver_trabajos():
         data = cur.fetchall()
         cur.close()        
     else:
-        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos from o_trabajos
+        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe from o_trabajos
                    left join clientes on clientes.id = o_trabajos.id_clie
                    where estado != 'ENTREGADO'  order by fecha desc'''
         cur.execute(query)

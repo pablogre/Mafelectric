@@ -30,7 +30,7 @@
 
                     {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %}
 
-                    <div {% if 'Felicitaciones in mensaje'%} class="alert alert-success alert-dismissible fade show" {% else %} class="alert alert-warning alert-dismissible fade show" {% endif %} role="alert">
+                    <div {% if 'Felicitaciones' in mensaje %} class="alert alert-success alert-dismissible fade show" {% else %} class="alert alert-warning alert-dismissible fade show" {% endif %} role="alert">
                         {{message}}
 
                         <button type="button" class="close" data-dismiss="alert" aria-label="Close">

@@ -1,4 +1,7 @@
 {% extends "layout.html" %} 
+{%if session['nivel_ta'] == 'admin'%}
+    {% include "header.html" %}
+{%endif%}
 {% block body %}
 <div class="container">
     <br>
@@ -20,7 +23,7 @@
     <br>
     {% for row in data%}
     <!--select id_ot, fecha, descrip, estado, fecha_entrega, estimado from o_trabajos -->
-    <div class="jumbotron p-3" {% if row.3 == 'ENTREGADO' %} style="background-color:rgb(204, 248, 218);" {% elif row.3 == 'DEMORADO' %} style="background-color:rgb(255, 159, 159);" {% elif row.3 == 'FINALIZADO' %} style="background-color:rgb(193, 250, 243);" {% elif row.3 == 'EN REPARACIÓN' %} style="background-color:rgb(231, 246, 194);"{% endif %} >
+    <div class="jumbotron p-3" {% if row.3 == 'ENTREGADO' %} style="background-color:rgb(204, 248, 218);" {% elif row.3 == 'DEMORADO' %} style="background-color:rgb(255, 159, 159);" {% elif row.3 == 'FINALIZADO' %} style="background-color:rgb(193, 250, 243);" {% elif row.3 == 'EN REPARACIÓN' %} style="background-color:rgb(250, 255, 182);"{% elif row.3 == 'REVISIONAR' %} style="background-color:rgb(251, 209, 255);"{% elif row.3 == 'PRESUPUESTAR' %} style="background-color:rgb(255, 232, 182);"{% endif %} >
         <div class="row">       
             <div class="form-group col-md-2">
                 <label for="id_ot" class="control-label">Ord. de Trabajo </label>
@@ -35,8 +38,12 @@
                 <input type="text" class="form-control"  value="{% if row.4 != None %} {{row.4}} {% else %}  {% endif %}" disabled>
             </div> 
             <div class="form-group col-md-3"> 
-                <label for="id_ot" class="control-label">Estado </label>
-                <input type="text" class="form-control"  value="{{row.3}}" disabled>
+                <label for="id_ot" class="control-label"> <strong>Estado</strong>  </label>
+                <input type="text" class="form-control" style="font-weight: 700;" value="{{row.3}}" disabled>
+            </div>
+            <div class="form-group col-md-2">
+                <label for="id_ot" class="control-label">Importe </label>
+                <input type="number" step="0.01" class="form-control" name="id_ot" value="{{row.6}}" disabled>
             </div> 
             {% if row.3 != 'ENTREGADO' %}
             <div class="col-md-1">
@@ -48,7 +55,7 @@
         
         <div class="row">
             <div class="col-md-12">
-                <textarea class="form-control rounded-1" id="otros" name="otros" rows="5" cols="60" placeholder="Ingrese descripción del problema" disabled>{{row.2}}</textarea>
+                <textarea class="form-control rounded-1" id="otros" name="otros" rows="7" cols="60" placeholder="Ingrese descripción del problema" disabled>{{row.2}}</textarea>
             </div>
            
         </div> 
@@ -86,12 +93,16 @@
                     </div> 
                     <div class="form-group col-md-3"> 
                         <label for="estado" class="control-label">Estado </label>
-                        <input type="text" class="form-control" id="estado" value="EN REPARACIÓN" disabled>
+                        <input type="text" class="form-control" id="estado" value="REVISIONAR" disabled>
                     </div> 
                     <div class="form-group col-md-2"> 
                         <label for="estimado" class="control-label">Estimado Hs. </label>
-                        <input type="number" class="form-control" id="estimado"  min = "0" value="0" >
-                    </div> 
+                        <input type="number" class="form-control" id="estimado"  min = "0" value="0" disabled>
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="id_ot" class="control-label">Importe </label>
+                        <input type="number" class="form-control" id="importe" min="0" value="0" disabled>
+                    </div>  
                     <div class="form-group "> 
                         <input type="text" class="form-control" id="id_clie" name="id_clie" value="{{cliente.0.3}}" hidden>
                     </div> 
@@ -148,11 +159,28 @@
                         <label for="estado" class="control-label">Estado </label>
                         <!-- <input type="text" class="form-control" id="e_estado"  > -->
                         <select id="e_estado" class="form-control">
-                            {% if estados %} 
+                            {% if estados and session['nivel_ta'] == 'admin' %} 
                                <option value="" selected disabled>Seleccione:</option>
                                 {% for estado in estados %}
                                     <option value="{{estado.1}}">{{estado.1}}</option>
                                 {% endfor %}
+                            {% else %}
+                                <option value="" selected disabled>Seleccione:</option>
+                                {% if data %}
+                                    {% if data.0.3 == 'PRESUPUESTAR' %}  
+                                        <option value="PRESUPUESTAR" selected>PRESUPUESTAR</option> 
+                                        <option value="CANCELADO">CANCELADO</option> 
+                                        <option value="EN REPARACION">EN REPARACION</option> 
+                                    {% endif %} 
+                                    {% if data.0.3 == 'REVISIONAR' %}  
+                                        <option value="REVISIONAR" selected>REVISIONAR</option> 
+                                    {% endif %}   
+                                    {% if data.0.3 == 'FINALIZADO' %}  
+                                        <option value="FINALIZADO" selected>FINALIZADO</option>
+                                        <option value="ENTREGADO">ENTREGADO</option> 
+                                    {% endif %}   
+                                {% endif %}  
+
                             {% endif %}    
                         </select>
                     </div> 
@@ -160,8 +188,12 @@
                 <div class="row">
                 <div class="form-group col-md-2"> 
                         <label for="estimado" class="control-label">Estimado Hs. </label>
-                        <input type="number" class="form-control" id="e_estimado" min = "0" >
-                    </div> 
+                        <input type="number" class="form-control" id="e_estimado" min = "0" {%if session['nivel_ta'] != 'admin'%} disabled {% endif %} >
+                    </div>
+                    <div class="form-group col-md-2">
+                        <label for="importe" class="control-label">Importe </label>
+                        <input type="number" class="form-control" id="e_importe" min="0" {%if session['nivel_ta'] != 'admin'%} disabled {% endif %}>
+                    </div>  
                     <div class="form-group "> 
                         <input type="text" class="form-control" id="e_id_clie"  hidden>
                     </div> 
@@ -207,10 +239,12 @@ $('#mymodal .guardar').on('click', function() {
         swal("Ingrese la fecha de ingreso !", "", "warning");
         return
     }
-    if($('#estimado').val()==='0') {
-        swal("Ingrese el Tiempo Estimado de Reparación !", "", "warning");
-        return
-    }
+    
+    //if($('#estimado').val()==='0') {
+    //    swal("Ingrese el Tiempo Estimado de Reparación !", "", "warning");
+    //    return
+    //}
+
     if($('#descrip').val()==='') {
         swal("Ingrese descripción del problema !", "", "warning");
         return
@@ -223,7 +257,8 @@ $('#mymodal .guardar').on('click', function() {
         estimado: $('#estimado').val(),
         estado: $('#estado').val(),
         descrip: $('#descrip').val(),
-        id_ot: $('#id_ot').val()
+        id_ot: $('#id_ot').val(),
+        importe: $('#importe').val()
     }
    
     $.ajax({
@@ -242,6 +277,7 @@ $('#mymodal .guardar').on('click', function() {
     });
 })
 
+////////////////////////////////////// editar ////////////////////////////////////////////////
 function editar(id_ot) {
     let datos = { 'id_ot': id_ot }
     $.ajax({
@@ -263,6 +299,7 @@ function editar(id_ot) {
                 $("#e_estimado").val(datos[6])
                 $("#e_descrip").val(datos[3])
                 $("#e_id_clie").val(datos[1])
+                $("#e_importe").val(datos[7]).toString
 
                 $('#modalEdit').modal("show")
             }
@@ -280,10 +317,11 @@ $('#modalEdit .guardar').on('click', function() {
         swal("Ingrese la fecha de ingreso !", "", "warning");
         return
     }
-    if($('#e_estimado').val()==='0') {
-        swal("Ingrese el Tiempo Estimado de Reparación !", "", "warning");
-        return
-    }
+    //if($('#e_estimado').val()==='0') {
+    //    swal("Ingrese el Tiempo Estimado de Reparación !", "", "warning");
+    //    return
+    //}
+
     if($('#e_descrip').val()==='') {
         swal("Ingrese descripción del problema !", "", "warning");
         return
@@ -296,7 +334,8 @@ $('#modalEdit .guardar').on('click', function() {
         estimado: $('#e_estimado').val(),
         estado: $('#e_estado').val(),
         descrip: $('#e_descrip').val(),
-        id_ot: $('#e_id_ot').val()
+        id_ot: $('#e_id_ot').val(),
+        importe: $('#e_importe').val()
     }
    
     $.ajax({

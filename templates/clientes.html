@@ -1,4 +1,9 @@
-{% extends "layout.html" %} {% include "header.html" %} {% block title %} Clientes {% endblock %} {% block body %}
+{% extends "layout.html" %} 
+{%if session['nivel_ta'] == 'admin' %}
+    {% include "header.html" %}
+{%endif%}
+{% block title %} Clientes {% endblock %} {% block body %}
+<br>
 <div class="container">
     <div class="row">
         <div class="col md-12">

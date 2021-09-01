@@ -1,9 +1,12 @@
 {% extends "layout.html" %} 
+{%if session['nivel_ta'] == 'admin' or session['nivel_ta'] == 'supervisor'  %}
+    {% include "header.html" %}
+{%endif%}
 {% block body %}
 
 
 <div class="container">
-    <h1 style="padding-top: 20px;">TRABAJOS</h1>
+    <h1 style="padding-top: 20px;">FICHAS DE TRABAJOS</h1>
     <div class="row">
         <div class="form-group col-md-3"> 
             <label for="estado" class="control-label">Filtrar Estado </label>
@@ -16,12 +19,18 @@
                 {% endif %}    
             </select>
         </div>
+        <div class="form-group col-md-3"> 
+            <a href="clientes" class="btn btn-primary" style="float: left; margin-top: 32px;">Clientes</a>
+        </div>    
+        <div class="form-group col-md-6"> 
+            <a href="ver_trabajos" class="btn btn-success" style="float: right; margin-top: 32px;">Inicio</a>
+        </div>    
     </div>
     {% if data %}
         {% for row in data%}
         <!--select id_ot, fecha, descrip, estado, fecha_entrega, estimado from o_trabajos -->
-        <div class="jumbotron p-3"  {% if row.3 == 'ENTREGADO' %} style="background-color:rgb(204, 248, 218);" {% elif row.3 == 'DEMORADO' %} style="background-color:rgb(255, 159, 159);" {% elif row.3 == 'FINALIZADO' %} style="background-color:rgb(193, 250, 243);" {% elif row.3 == 'EN REPARACIÓN' %} style="background-color:rgb(231, 246, 194);"{% endif %} >
-            {% if nivel_ta == 'admin' %}
+        <div class="jumbotron p-3"  {% if row.3 == 'ENTREGADO' %} style="background-color:rgb(204, 248, 218);" {% elif row.3 == 'DEMORADO' %} style="background-color:rgb(255, 159, 159);" {% elif row.3 == 'FINALIZADO' %} style="background-color:rgb(193, 250, 243);" {% elif row.3 == 'EN REPARACIÓN' %} style="background-color:rgb(250, 255, 182);"{% elif row.3 == 'REVISIONAR' %} style="background-color:rgb(251, 209, 255);"{% elif row.3 == 'PRESUPUESTAR' %} style="background-color:rgb(255, 232, 182);"{% elif row.3 == 'COTIZADO' %} style="background-color:rgb(169, 164, 255);"{% endif %}>
+            {% if nivel_ta == 'admin' or nivel_ta == 'supervisor'%}
             <div class="row" >
                 <div class="form-group col-md-6">
                     <label for="cliente" class="control-label">Cliente </label>
@@ -33,30 +42,49 @@
                 </div>  
             </div>
             {% endif %}
+            <div class="row">
+                {% if row.3 != 'ENTREGADO' %}
+                <div class="col-md-8"></div>
+                {% if nivel_ta == 'admin' or nivel_ta == 'supervisor'%}
+                <div class="col-md-2 float-right">
+                    <br>
+                    <button  type="button" class="btn btn-primary float-right" onclick="editar( {{row.0}} )">Editar</button>      
+                </div>
+                {% endif %}    
+                <div class="col-md-2 float-right">
+                    <br>    
+                    {% if row.3 != 'FINALIZADO'%}
+                        <a href="/ver_fichas_trabajos/{{ row.0 }}" class="editBtn btn btn-primary float-right">Trabajos</a>      
+                    {% endif %} 
+                    
+                </div>
+                {% endif %}
+            </div>
             <div class="row">       
                 <div class="form-group col-md-2">
                     <label for="id_ot" class="control-label">Ord. de Trabajo </label>
-                    <input type="text" class="form-control" name="id_ot" value="{{row.0}}" disabled>
+                    <input type="text" class="form-control id_ot" name="id_ot" value="{{row.0}}" disabled>
                 </div> 
                 <div class="form-group col-md-3">
                     <label for="id_ot" class="control-label">Fecha Ingreso </label>
                     <input type="text" class="form-control"  value="{% if row.1 %} {{row.1.strftime('%d-%m-%Y %H:%M')}}  {% endif %}" disabled>
                 </div> 
                 <div class="form-group col-md-3"> 
-                    <label for="id_ot" class="control-label">Estado </label>
-                    <input type="text" class="form-control"  value="{{row.3}}" disabled>
-                </div> 
-                {% if row.3 != 'ENTREGADO' %}
-                <div class="col-md-3">
-                    <br>
-                    <a href="/ver_fichas_trabajos/{{ row.0 }}" class="editBtn btn btn-primary float-right">Visualizar</a>        
+                    <label for="estado" class="control-label"> <strong>Estado</strong> </label>
+                    <input type="text" class="form-control estado" style="font-weight: 700;"  value="{{row.3}}" disabled>
                 </div>
-                {% endif %}
+                {% if nivel_ta == 'admin' %}
+                <div class="form-group col-md-2">
+                    <label for="importe" class="control-label">Importe </label>
+                    <input type="text" class="form-control importe" name="id_ot" value="{{row.8}}" disabled>
+                </div>
+                {% endif %}  
+                
             </div> 
             
             <div class="row">
                 <div class="col-md-12">
-                    <textarea class="form-control rounded-1" id="otros" name="otros" rows="5" cols="60" placeholder="Ingrese descripción del problema" disabled>{{row.2}}</textarea>
+                    <textarea class="form-control rounded-1" id="otros" name="otros" rows="3" cols="60" placeholder="Ingrese descripción del problema" disabled>{{row.2}}</textarea>
                 </div>
             
             </div> 
@@ -74,9 +102,48 @@
             </div>
         </div>    
     {% endif %}     
-            
-
 </div>
+
+<!-- Modal Edit Modal Edit  Modal Edit Modal Edit Modal Edit Modal Edit Modal Edit Modal Edit Modal Edit Modal Edit  -->
+<div id="modalEdit" class="modal fade" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title"></h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">        
+                    <div class="form-group col-md-4"> 
+                        <label for="estado" class="control-label">Estado </label>
+                        <select id="e_estado" class="form-control">
+                            {% if estados %} 
+                               <option value="" selected disabled>Seleccione:</option>
+                                {% for estado in estados %}
+                                    <option value="{{estado.1}}">{{estado.1}}</option>
+                                {% endfor %}
+                            {% endif %}    
+                        </select>
+                    </div> 
+                </div>    
+                <div class="row">
+                    <div class="form-group col-md-2">
+                        <label for="importe" class="control-label">Importe </label>
+                        <input type="number" class="form-control" id="e_importe" min="0" {% if nivel_ta == 'supervisor' %} disabled {%endif%}>
+                    </div>  
+                    <div class="form-group "> 
+                        <input type="text" class="form-control" id="e_id_ot"  hidden>
+                    </div> 
+                </div>              
+            </div>
+            <div class="modal-footer">
+                <button class="guardar btn btn-primary" type="submit">Guardar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
 
 {% endblock %} 
 
@@ -87,5 +154,57 @@ $('#estados').change(function() {
     let estado = $( "#estados" ).val();
     location.href = "../ver_trabajos?estado="+estado;
 });
+
+$('.guardar').on('click', function() {
+    
+    let datos = {
+        estado: $('#e_estado').val(),
+        id_ot: $('#e_id_ot').val(),
+        importe: $('#e_importe').val()
+    }
+
+    $.ajax({
+        url: "../abm_admin_ftrab",
+        type: "POST",
+        data: datos,
+        success: function(data) {
+            console.log('Data: '+data)
+            if (data.type == 'ok') {
+                location.reload()
+            }
+        },
+        error: function() {
+            alert('ERROR,  CAGASTE FUEGO')
+        }
+    });
+})
+
+
+function editar(id_ot) {
+    let datos = { 'id_ot': id_ot}
+    $.ajax({
+        url: "../edit_admin_ftrab",
+        type: "POST",
+        data: datos,
+        success: function(data) {
+            console.log(data)
+            if (data.type == 'ok') {
+                //location.reload()
+                let datos = data.data[0];
+                titulo =  'Editando Trabajo ' +' Nº: '+ datos[0] 
+                $(".modal-title").text(titulo);
+                $("#e_id_ot").val(datos[0])
+                $("#e_estado").val(datos[1])
+                $("#e_importe").val(datos[2])
+
+                $('#modalEdit').modal("show")
+            }
+        },
+        error: function() {
+            alert('ERROR,  CAGASTE FUEGO')
+        }
+    });
+}
+
 </script>
 {% endblock %}    

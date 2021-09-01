@@ -11,7 +11,7 @@
     <br>
     {% for row in data%}
     <!--select id_ot, fecha, descrip, estado, fecha_entrega, estimado from o_trabajos -->
-    <div class="jumbotron p-3" >
+    <div class="jumbotron p-3" {% if row.5 == 'ENTREGADO' %} style="background-color:rgb(204, 248, 218);" {% elif row.5 == 'DEMORADO' %} style="background-color:rgb(255, 159, 159);" {% elif row.5 == 'FINALIZADO' %} style="background-color:rgb(193, 250, 243);" {% elif row.5 == 'EN REPARACIÓN' %} style="background-color:rgb(250, 255, 182);"{% elif row.5 == 'REVISIONAR' %} style="background-color:rgb(251, 209, 255);"{% elif row.5 == 'PRESUPUESTAR' %} style="background-color:rgb(255, 232, 182);"{% elif row.5 == 'COTIZADO' %} style="background-color:rgb(169, 164, 255);"{% endif %}>
         <div class="row">       
             <div class="form-group col-md-2">
                 <label for="id_ot" class="control-label">Ord. de Trabajo </label>
@@ -26,8 +26,8 @@
                 <input type="number" class="form-control"  value="{{row.2}}" disabled>
             </div> 
             <div class="form-group col-md-3"> 
-                <label for="id_ot" class="control-label">Estado </label>
-                <input type="text" class="form-control"  value="{{row.5}}" disabled>
+                <label for="id_ot" class="control-label"> <strong>Estado</strong>  </label>
+                <input type="text" class="form-control" style="font-weight: 700;" value="{{row.5}}" disabled>
             </div> 
            
         </div> 
@@ -62,18 +62,49 @@
                     </div>
                     <div class="form-group col-md-2">
                         <label for="hs_trab" class="control-label">Hs. de Trabajo </label>
-                        <input type="number" class="form-control" name="hs_trab" id="hs_trab" min="0" value="0">
+                        <input type="number" class="form-control" name="hs_trab" id="hs_trab"  value="0">
                     </div>
                     <div class="form-group col-md-3"> 
                         <label for="estado" class="control-label">Estado </label>
-                        <select id="estado" class="form-control">
+                        <select id="e_estado" class="form-control">
+                            {% if estados and session['nivel_ta'] == 'admin' %} 
+                               <option value="" selected disabled>Seleccione:</option>
+                                {% for estado in estados %}
+                                    <option value="{{estado.1}}">{{estado.1}}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="" selected disabled>Seleccione:</option>
+                                {% if data %}
+                                    {% if data.0.5 == 'PRESUPUESTAR' %}  
+                                        <option value="PRESUPUESTAR" selected>PRESUPUESTAR</option> 
+                                        <option value="CANCELADO">CANCELADO</option> 
+                                        <option value="EN REPARACION">EN REPARACION</option> 
+                                    {% endif %} 
+                                    {% if data.0.5 == 'REVISIONAR' %}  
+                                        <option value="REVISIONAR" selected>REVISIONAR</option> 
+                                        <option value="PRESUPUESTAR">PRESUPUESTAR</option> 
+                                        <option value="DEMORADO">DEMORADO</option> 
+                                    {% endif %}   
+                                    {% if data.0.5 == 'FINALIZADO' %}  
+                                        <option value="FINALIZADO" selected>FINALIZADO</option>
+                                        <option value="ENTREGADO">ENTREGADO</option> 
+                                    {% endif %}   
+                                {% else %}
+                                    <option value="REVISIONAR" selected>REVISIONAR</option> 
+                                    <option value="PRESUPUESTAR">PRESUPUESTAR</option> 
+                                    <option value="DEMORADO">DEMORADO</option>     
+                                {% endif %}  
+
+                            {% endif %}    
+                        </select>
+                        <!-- <select id="estado" class="form-control">
                             {% if estados %} 
                                <option value="" selected disabled>Seleccione:</option>
                                 {% for estado in estados %}
                                     <option value="{{estado.1}}">{{estado.1}}</option>
                                 {% endfor %}
                             {% endif %}    
-                        </select>
+                        </select> -->
                     </div>
                     <div class="form-group col-md-3">
                         <input type="text" id="id_clie" class="form-control"  value="{{data.4}}" hidden>
@@ -100,18 +131,19 @@
 
 {% block script %}
 <script type="text/javascript">
-$('#mymodal .guardar').on('click', function() {
+$('.guardar').on('click', function() {
     
     if($('#fecha').val()==='') {
-        swal("Ingrese la feecha y hora !", "", "warning");
+        swal("Ingrese la fecha y hora !", "", "warning");
         return
     }
-    if($('#hs_trab').val()==='') {
+    if($('#hs_trab').val()==='0') {
         swal("Ingrese las Horas Trabajadas !", "", "warning");
         return
     }
-    if($('#estimado').val()==='0') {
-        swal("Ingrese el Tiempo Estimado de Reparación !", "", "warning");
+    alert($('#estado').val())
+    if($('#estado').val()===null) {
+        swal("Ingrese el Estado !", "", "warning");
         return
     }
     if($('#desc_job').val()==='') {
