@@ -66,7 +66,7 @@
                     </div>
                     <div class="form-group col-md-3"> 
                         <label for="estado" class="control-label">Estado </label>
-                        <select id="e_estado" class="form-control">
+                        <select id="estado" class="form-control">
                             {% if estados and session['nivel_ta'] == 'admin' %} 
                                <option value="" selected disabled>Seleccione:</option>
                                 {% for estado in estados %}
@@ -74,18 +74,23 @@
                                 {% endfor %}
                             {% else %}
                                 <option value="" selected disabled>Seleccione:</option>
-                                {% if data %}
-                                    {% if data.0.5 == 'PRESUPUESTAR' %}  
+                                {% if estado_actual %}
+                                    {% if estado_actual.0.0 == 'PRESUPUESTAR' %}  
                                         <option value="PRESUPUESTAR" selected>PRESUPUESTAR</option> 
                                         <option value="CANCELADO">CANCELADO</option> 
-                                        <option value="EN REPARACION">EN REPARACION</option> 
+                                        <option value="EN REPARACIÓN">EN REPARACIÓN</option> 
                                     {% endif %} 
-                                    {% if data.0.5 == 'REVISIONAR' %}  
+                                    {% if estado_actual.0.0 == 'REVISIONAR' %}  
                                         <option value="REVISIONAR" selected>REVISIONAR</option> 
                                         <option value="PRESUPUESTAR">PRESUPUESTAR</option> 
                                         <option value="DEMORADO">DEMORADO</option> 
-                                    {% endif %}   
-                                    {% if data.0.5 == 'FINALIZADO' %}  
+                                    {% endif %}  
+                                    {% if estado_actual.0.0 == 'EN REPARACIÓN' %}  
+                                        <option value="EN REPARACIÓN" selected>EN REPARACIÓN</option> 
+                                        <option value="FINALIZADO">FINALIZADO</option> 
+                                        <option value="DEMORADO">DEMORADO</option> 
+                                    {% endif %}    
+                                    {% if estado_actual.0.0 == 'FINALIZADO' %}  
                                         <option value="FINALIZADO" selected>FINALIZADO</option>
                                         <option value="ENTREGADO">ENTREGADO</option> 
                                     {% endif %}   
@@ -160,7 +165,7 @@ $('.guardar').on('click', function() {
         id_ot: $('#id_ot').val(),
         id_job: $('#id_job').val()
     }
-   
+
     $.ajax({
         url: "../abm_ftrab",
         type: "POST",
@@ -172,7 +177,7 @@ $('.guardar').on('click', function() {
             }
         },
         error: function() {
-            alert('ERROR,  CAGASTE FUEGO')
+            alert('ERROR, VERIFIQUE... ')
         }
     });
 })

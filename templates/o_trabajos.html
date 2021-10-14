@@ -170,11 +170,16 @@
                                     {% if data.0.3 == 'PRESUPUESTAR' %}  
                                         <option value="PRESUPUESTAR" selected>PRESUPUESTAR</option> 
                                         <option value="CANCELADO">CANCELADO</option> 
-                                        <option value="EN REPARACION">EN REPARACION</option> 
+                                        <option value="EN REPARACIÓN">EN REPARACIÓN</option> 
                                     {% endif %} 
                                     {% if data.0.3 == 'REVISIONAR' %}  
                                         <option value="REVISIONAR" selected>REVISIONAR</option> 
-                                    {% endif %}   
+                                    {% endif %}  
+                                    {% if data.0.3 == 'EN REPARACIÓN' %}  
+                                        <option value="EN REPARACIÓN">EN REPARACIÓN</option> 
+                                        <option value="DEMORADO">DEMORADO</option> 
+                                        <option value="FINALIZADO" selected>FINALIZADO</option>  
+                                    {% endif %} 
                                     {% if data.0.3 == 'FINALIZADO' %}  
                                         <option value="FINALIZADO" selected>FINALIZADO</option>
                                         <option value="ENTREGADO">ENTREGADO</option> 
@@ -272,7 +277,7 @@ $('#mymodal .guardar').on('click', function() {
             }
         },
         error: function() {
-            alert('ERROR,  CAGASTE FUEGO')
+            alert('ERROR, VERIFIQUE... ')
         }
     });
 })
@@ -305,7 +310,7 @@ function editar(id_ot) {
             }
         },
         error: function() {
-            alert('ERROR,  CAGASTE FUEGO')
+            alert('ERROR, VERIFIQUE... ')
         }
     });
 }
@@ -349,7 +354,7 @@ $('#modalEdit .guardar').on('click', function() {
             }
         },
         error: function() {
-            alert('ERROR,  CAGASTE FUEGO')
+            alert('ERROR, VERIFIQUE... ')
         }
     });
 })

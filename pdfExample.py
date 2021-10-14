@@ -350,9 +350,9 @@ def gen_pdf_fisc(id):
             precio = str(row[57])
             pdf.drawRightString(400,y,precio.replace(',','@').replace('.',',').replace('@','.'))
         
-        #IVA
         if data2[67] == 1 or data2[67] == 6:
-            iva = str(row[42])
+            iva =str( round( row[57] - ( row[57] / (1 + row[58] /100)),2 ))
+            #iva = str(row[42])
             pdf.drawRightString(460,y,iva.replace(',','@').replace('.',',').replace('@','.'))
 
         #Sub.tot       

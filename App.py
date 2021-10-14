@@ -1554,6 +1554,16 @@ def ver_fichas_trabajos(id_ot):
     data = cur.fetchall()
     cur.close()
     
+    connection=conexion()
+    cur = connection.cursor()
+    query = 'select estado from o_trabajos where id_ot = %s'
+    params = [id_ot]
+    cur.execute(query, params)
+    estado_actual = cur.fetchall()
+    cur.close()
+    print('estado_actual : ',estado_actual[0][0] )
+
+
     cur = connection.cursor()
     query = 'select * from estados'
     cur.execute(query)
@@ -1562,7 +1572,7 @@ def ver_fichas_trabajos(id_ot):
 
     connection.close()
     print(data)
-    return render_template('ver_fichas_trabajos.html', data=data, estados = estados, id_ot = id_ot)    
+    return render_template('ver_fichas_trabajos.html', data=data, estados = estados, id_ot = id_ot, estado_actual=estado_actual)    
 
 
 if __name__ == "__main__":

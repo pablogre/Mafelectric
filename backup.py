@@ -34,7 +34,9 @@ BACKUP_PATH = '/dbbackup'
 # Getting current DateTime to create the separate backup folder like "20180817-123433".
 DATETIME = time.strftime('%Y%m%d-%H%M%S')
 TODAYBACKUPPATH = BACKUP_PATH + '/' + DATETIME
- 
+
+print(TODAYBACKUPPATH) 
+
 # Checking if backup folder already exists or not. If not exists will create it.
 try:
     os.stat(TODAYBACKUPPATH)
