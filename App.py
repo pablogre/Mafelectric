@@ -1345,7 +1345,7 @@ def ver_comp():
 @app.route('/salir', methods = ['GET','POST'] )
 def salir():
     session.clear()
-    return redirect(url_for('login'))    
+    return redirect(url_for('login_taller'))    
 
 
 @app.route('/o_trabajos/<id_clie>', methods = ['GET','POST'] )
@@ -1432,7 +1432,7 @@ def abm_ftrab():
             connection.commit()
             
         else:
-            fecha = request.form['fecha'].strip() 
+            fecha1 = request.form['fecha'].strip() 
             print('fecha:',fecha)
             query = "update trabajos set fecha = %s, desc_job = %s, estado = %s, hs_trab = %s where id_ot = %s"
             params = [fecha, desc_job, estado, hs_trab, id_ot]  
@@ -1440,11 +1440,11 @@ def abm_ftrab():
             connection.commit()
 
         #Fecha actual
-        fecha = date.today()  
+        fecha = fecha1[8:10]+'/'+fecha1[5:7]+'/'+fecha1[0:4]+' '+fecha1[11:13]+':'+fecha1[14:]
         usu_x = session['us_ta']
         print('usuario:', usu_x)
-        query = "update o_trabajos set descrip = concat(descrip , chr(13), fecha, '-->' , %s , ' :' , %s), estado = %s where id_ot = %s"
-        params = [usu_x, desc_job, estado, id_ot]  
+        query = "update o_trabajos set descrip = concat(descrip , chr(13), %s, '-->' , %s , ' :' , %s), estado = %s where id_ot = %s"
+        params = [fecha, usu_x, desc_job, estado, id_ot]  
         cur.execute(query,params)
         connection.commit()
         cur.close()    
@@ -1537,11 +1537,12 @@ def ver_trabajos():
 
     connection.close()
     nivel_ta = session['nivel_ta']
+    us_ta = session['us_ta']
     print(nivel_ta)
     if estado:
-        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado)
+        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado, us_ta = us_ta)
     else:
-        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado)
+        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado, us_ta = us_ta)
 
 @app.route('/ver_fichas_trabajos/<id_ot>', methods = ['GET','POST'] )
 def ver_fichas_trabajos(id_ot):
@@ -1569,10 +1570,10 @@ def ver_fichas_trabajos(id_ot):
     cur.execute(query)
     estados = cur.fetchall()
     cur.close()
-
+    us_ta = session['us_ta']
     connection.close()
     print(data)
-    return render_template('ver_fichas_trabajos.html', data=data, estados = estados, id_ot = id_ot, estado_actual=estado_actual)    
+    return render_template('ver_fichas_trabajos.html', data=data, estados = estados, id_ot = id_ot, estado_actual=estado_actual, us_ta = us_ta)    
 
 
 if __name__ == "__main__":
