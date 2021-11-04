@@ -31,6 +31,9 @@ def login():
 def login_taller():
     return render_template('login_taller.html')
 
+@app.route('/login_cliente') 
+def login_cliente():
+    return render_template('login_cliente.html')
 
 @app.route('/val_log', methods=['GET','POST'])
 def val_log():
@@ -95,6 +98,7 @@ def val_log_taller():
         cur.execute(query,params)
         data = cur.fetchall()
         session['nivel_ta'] = ""
+        session['id_cliente'] = 0
         if data:
             session['us_ta'] = us_ta
             session['clave_ta'] = clave_ta
@@ -103,6 +107,41 @@ def val_log_taller():
             return redirect(url_for('ver_trabajos'))
         else:
             return redirect(url_for('login_taller'))
+
+@app.route('/val_log_cliente', methods=['GET','POST'])
+def val_log_cliente():
+    if request.method == 'POST':
+        con=conexion()
+        cur = con.cursor()
+        query = 'select * from empresas'
+        cur.execute(query)
+        data = cur.fetchone()
+        print('data:',data)
+        cur.close
+        if data:
+            session['id_empresa'] = data[0]
+            session['razon_soc'] = data[1]
+            session['usuario'] = randint(0, 100000)
+            
+        clave_ta = request.form['ta_clave']
+        con = conexion()
+        cur = con.cursor()
+        query = "select * from clientes where cuit = %s"
+        params = [clave_ta]
+        cur.execute(query,params)
+        data = cur.fetchall()
+        print('Data:' , data)
+        print('data0:', data[0][0])
+        print('data1:', data[0][1])
+        session['id_cliente'] = 0
+        if data:
+            session['cliente'] = data[0][1]
+            session['id_cliente'] = data[0][0]
+            return redirect(url_for('o_trabajos', id_clie=session['id_cliente']))
+        else:
+            return redirect(url_for('login_cliente'))
+
+
 
 @app.route('/menu', methods = ['GET','POST'])
 def menu():

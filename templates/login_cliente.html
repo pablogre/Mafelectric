@@ -12,19 +12,21 @@
 
 
 {% block body %}
-<body style="background-image: url(../static/images/bobinadosbg.jpg); background-size: 100%; background-repeat: no-repeat;">
+<body style="background-image: url(../static/images/bobinadosbg.jpg); background-size: 100%;  background-size: cover">
     <br>
     <br>   
     
     <div class="container">
         <div id="modaledit" role="dialog">
-            <div class="container-fluid"> 
-                <div class="row">
+            <!-- <div class="jumbotron"> -->
+                <div class="container-fluid"> 
+                    <div class="row">
                     <div class="col-sm-12 d-flex justify-content-center">
-                        <h1 class="text-center">MAFELECTRIC </h1>.
+                            <h1 class="text-center"; style="color: darkcyan;">MAFELECTRIC </h1>    
+                    </div> 
                     </div>
                 </div>
-            </div>
+            <!-- </div> -->
             
             <div class="modal-dialog">
                 
@@ -47,24 +49,22 @@
                     {% endfor %} {% endif %} {% endwith %}
 
                     <div class="modal-body">
-                        <form name="login_taller" action="val_log_taller" method="POST">
+                        <form name="login_cliente" action="val_log_cliente" method="POST">
 
-                            <div class="form-group">
+                            <!-- <div class="form-group">
                                 <label>Usuario:</label>
                                 <input type="text" class="form-control"  name= "ta_usuario" id="ta_usuario" placeholder="Ingrese el Usuario"   value="" require autofocus>
-                            </div>
+                            </div> -->
 
                             <div class="form-group">
-                                <label>Contraseña:</label> 
-                                <input type="password" class="form-control" name= "ta_clave" id="ta_clave" placeholder="Ingrese la contraseña" value=""  require>
+                                <label>C.U.I.T.:</label> 
+                                <input type="text" class="form-control" name= "ta_clave" id="ta_clave" placeholder="Ingrese su C.U.I.T. Ej.: 99-99999999-9" value=""  require>
                             </div>
 
                             <div class="form-group">
                                 <button class="btn btn-primary btn-block" type="submit">Ingresar</button>
                             </div>
-                            <!-- <div class="mt-4 text-center">
-                                Aun no esta Registrado? <a href="{{ url_for('registrar') }}">Registrarse</a>
-                            </div> -->
+                            
                         </form>
 
                     </div>
@@ -72,7 +72,7 @@
             </div>
         </div>
     </div>
-     
+
 </body >   
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>

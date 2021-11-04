@@ -1,15 +1,25 @@
 {% extends "layout.html" %} 
-{%if session['nivel_ta'] == 'admin'%}
+{%if session['nivel_ta'] == 'admin' and session['id_cliente'] == 0%}
     {% include "header.html" %}
 {%endif%}
 {% block body %}
 <div class="container">
     <br>
+    {%if session['id_cliente'] == 0 %}
     <div class="row">
         <div class="col-md-12">
             <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#mymodal">Nuevo</button>
         </div>
-    </div> 
+    </div>
+    {%else%}
+        <div class="container-fluid"> 
+            <div class="row">
+                <div class="col-sm-12 d-flex justify-content-center">
+                    <h1 class="text-center"; style="color: darkcyan;">MAFELECTRIC </h1>  
+                </div>
+            </div>
+        </div>
+    {%endif%} 
     <div class="row">        
         <div class="form-group col-md-6">
             <label for="id_ot" class="control-label">Cliente </label>
@@ -45,7 +55,7 @@
                 <label for="id_ot" class="control-label">Importe </label>
                 <input type="number" step="0.01" class="form-control" name="id_ot" value="{{row.6}}" disabled>
             </div> 
-            {% if row.3 != 'ENTREGADO' %}
+            {% if row.3 != 'ENTREGADO' and session['id_cliente'] == 0 %}
             <div class="col-md-1">
                 <br>
                 <button  type="button" class="editBtn btn btn-primary float-right" onclick="editar( {{row.0}} )">Editar</button>        
