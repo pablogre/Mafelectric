@@ -61,6 +61,7 @@ def val_log():
             session['usuario'] = randint(0, 100000)
             session['us_ta'] = 'admin'
             session['nivel_ta'] = 'admin'
+            session['id_cliente'] = 0
             
             #return render_template('mensaje.html',mensaje='A FAVOR DE LEANDRO...' )   
             #return render_template('factufacil.html')
@@ -122,12 +123,13 @@ def val_log_cliente():
             session['id_empresa'] = data[0]
             session['razon_soc'] = data[1]
             session['usuario'] = randint(0, 100000)
-            
-        clave_ta = request.form['ta_clave']
+
+        cl_cuit = request.form['cl_cuit']    
+        cl_clave = request.form['cl_clave']
         con = conexion()
         cur = con.cursor()
-        query = "select * from clientes where cuit = %s"
-        params = [clave_ta]
+        query = "select * from clientes where cuit = %s and cl_web = %s"
+        params = [cl_cuit, cl_clave]
         cur.execute(query,params)
         data = cur.fetchall()
         print('Data:' , data)
@@ -135,6 +137,7 @@ def val_log_cliente():
         print('data1:', data[0][1])
         session['id_cliente'] = 0
         if data:
+            # la variable de sesion  session['cliente'] es para mostrar o no los botones en o_trabajos si entra un cliente no muestro
             session['cliente'] = data[0][1]
             session['id_cliente'] = data[0][0]
             return redirect(url_for('o_trabajos', id_clie=session['id_cliente']))
@@ -228,7 +231,7 @@ def clientes():
     cur.execute(query, params)
     data = cur.fetchall()
     cur.close()
-            
+    print(data)              
     session['clientes_sel'] = 0
     connection.close()
 
@@ -1482,7 +1485,7 @@ def abm_ftrab():
         fecha = fecha1[8:10]+'/'+fecha1[5:7]+'/'+fecha1[0:4]+' '+fecha1[11:13]+':'+fecha1[14:]
         usu_x = session['us_ta']
         print('usuario:', usu_x)
-        query = "update o_trabajos set descrip = concat(descrip , chr(13), %s, '-->' , %s , ' :' , %s), estado = %s where id_ot = %s"
+        query = "update o_trabajos set descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), estado = %s where id_ot = %s"
         params = [fecha, usu_x, desc_job, estado, id_ot]  
         cur.execute(query,params)
         connection.commit()
@@ -1499,14 +1502,30 @@ def abm_admin_ftrab():
         estado = request.form['estado']
         id_ot =  request.form['id_ot']
         importe =  request.form['importe']
+        desc_job = request.form['desc_job']
+        usu_x = session['us_ta']
         connection=conexion()
         cur = connection.cursor()
         if str(id_ot) == '0':     
             query = "insert into o_trabajos (estado, id_ot, importe) values(%s,%s,%s)"
-            params = [estado, id_ot, importe]
+            params = [estado, id_ot, importe, desc_job]
         else:
-            query = "update o_trabajos set estado = %s, importe = %s where id_ot = %s"
-            params = [estado, importe, id_ot]    
+            fecha_entrega = time.strftime("%Y-%m-%d %H:%M:%S")
+            if estado == 'ENTREGADO':
+                if desc_job:
+                    query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), fecha_entrega = %s where id_ot = %s"
+                    params = [estado, importe, fecha_entrega, usu_x, desc_job, fecha_entrega, id_ot] 
+                else:
+                    query = "update o_trabajos set estado = %s, importe = %s, fecha_entrega = %s where id_ot = %s"
+                    params = [estado, importe, fecha_entrega,  id_ot]     
+            else:
+                if desc_job:
+                    query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s) where id_ot = %s"    
+                    params = [estado, importe, fecha_entrega, usu_x, desc_job, id_ot]    
+                else:
+                    query = "update o_trabajos set estado = %s, importe = %s where id_ot = %s"    
+                    params = [estado, importe, id_ot]   
+
         cur.execute(query,params)
         connection.commit()
         cur.close()
@@ -1553,7 +1572,7 @@ def ver_trabajos():
     cur = connection.cursor()
     if estado:
         print('Estado:', estado)
-        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe from o_trabajos
+        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe, fecha_entrega from o_trabajos
                    left join clientes on clientes.id = o_trabajos.id_clie
                    where estado = %s  order by fecha desc'''
         params=[estado]
@@ -1561,7 +1580,7 @@ def ver_trabajos():
         data = cur.fetchall()
         cur.close()        
     else:
-        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe from o_trabajos
+        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe, fecha_entrega from o_trabajos
                    left join clientes on clientes.id = o_trabajos.id_clie
                    where estado != 'ENTREGADO'  order by fecha desc'''
         cur.execute(query)
@@ -1578,6 +1597,7 @@ def ver_trabajos():
     nivel_ta = session['nivel_ta']
     us_ta = session['us_ta']
     print(nivel_ta)
+    print(data)
     if estado:
         return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado, us_ta = us_ta)
     else:

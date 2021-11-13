@@ -40,7 +40,7 @@
                                 <a href="/update_cli/{{row.0}}" data-toggle="modal" data-target="#modaledit{{row.0}}"> {{row.1}} </a>
                             </td>
                             <td>
-                                <a href="/cta_cte/{{row.0}}"> <strong> {{row.11}} </strong> </a>
+                                <a href="/cta_cte/{{row.0}}"> <strong> {{row.12}} </strong> </a>
                             </td>
                             <td>
                                 <!--  <a href="/update_cli/{{row.0}}" class="btn btn-default btn-xs" data-toggle="modal" data-target="#modaledit{{row.0}}"> <img src="/static/images/edit.png" alt="Editar" width="24" height="24"> </a> -->
@@ -137,6 +137,11 @@
                                                 <label>Cód. Postal:</label>
                                                 <input type="text" class="form-control" name="cp" value="{{row.8}}">
                                             </div>
+
+                                            <div class="form-group">
+                                                <label>Clave Web:</label>
+                                                <input type="text" class="form-control" name="cl_web" value="{{row.11}}">
+                                            </div>
                                             <div class="form-group">
                                                 <button class="btn btn-primary" type="submit">Guardar</button>
                                             </div>
@@ -212,6 +217,10 @@
                                 <div class="form-group">
                                     <label>Cód. Postal</label>
                                     <input type="text" class="form-control" name="cp">
+                                </div>
+                                <div class="form-group">
+                                    <label>Clave Web:</label>
+                                    <input type="text" class="form-control" name="cl_web">
                                 </div>
                                 <div class="form-group">
                                     <button class="btn btn-primary" type="submit">Añadir Cliente</button>

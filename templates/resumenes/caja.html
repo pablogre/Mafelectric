@@ -1,0 +1,120 @@
+{% extends "layout.html" %} 
+{%if session['nivel_ta'] == 'admin' %}
+    {% include "header.html" %}
+{%endif%}
+{% block title %} Planilla de Caja {% endblock %} {% block body %}
+<br>
+<div class="container">
+    <div class="row">
+        <div class="form-group col md-3">
+            <label>desde la fecha:</label>
+            <input type="date" class="form-control" name="fe1" id="fe1">
+        </div>        
+        <div class="form-group col md-3">
+            <label>Hasta:</label>
+            <input type="date" class="form-control" name="fe2" id="fe2">
+        </div>
+        <div class="form-group col-md-3"> 
+            
+            <button  type="button" class="ver_caja btn btn-primary float-left" style="margin-top: 32px;" >Consultar</button>
+            <!-- <a href="ver_trabajos" class="btn btn-success" style="float: right; margin-top: 32px;">Inicio</a> -->
+        </div> 
+        <div class="form-group col-md-4">
+        </div>         
+    </div>
+    
+    <div class="row">
+        <div class="col md-12">
+            <table class="table table-hover table-active table-sm" id="gri_cli">
+                <tr>
+                    <th>Ord. de Trab.</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Imorte</th>
+                </tr>
+                <tbody id="caja">
+                   
+                </tbody> 
+            </table>       
+        </div>    
+    </div>    
+
+    <br>
+    <div class="row">
+        <div class="col md-12 text-center" style="background-color: rgb(172, 169, 169);">REMITOS</div>
+    </div>
+    <br>
+    <div class="row">
+        <div class="col md-12">
+            <table class="table table-hover table-active table-sm" id="gri_cli">
+                <tr>
+                    <th>Ord. de Trab.</th>
+                    <th>Cliente</th>
+                    <th>Fecha</th>
+                    <th>Imorte</th>
+                </tr>
+                <tbody id="remitos">
+                   
+                </tbody> 
+            </table>       
+        </div>    
+    </div>    
+</div>
+
+{% endblock %}
+
+
+{% block script %}
+
+<script type="text/javascript">
+
+$('.ver_caja').on('click', function() {
+    
+    let datos = {
+        fe1: $('#fe1').val(),
+        fe2: $('#fe2').val(),
+
+    }
+
+    $.ajax({
+        url: "../caja/",
+        type: "POST",
+        data: datos,
+        success: function(data) {
+            console.log('Data: '+data)
+            if (data.type == 'ok') {
+            //iterar los datos 
+             let html  ="";               
+             var tot = 0;
+             for (var row in data.data) {
+                    tot += data.data[row][3]
+
+                    html +="<tr><td>"+data.data[row][0]+"</td> <td>"+data.data[row][1]+"</td><td>"+data.data[row][2]+"</td><td align=right>"+data.data[row][3].toFixed(2)+"</td></tr>"
+                };
+                html +="<tr><td colspan=2> </td> <td bgcolor=#B0C4DE> <strong> Total: </strong> </td> <td bgcolor=#B0C4DE align=right style=color:#191970;> <strong>" +tot.toFixed(2) +"</strong></td></tr>"
+           
+              $("#caja").html(html)
+              ///remitos
+              tot = 0;
+              html  ="";
+              for (var row in data.remitos) {
+                    tot += data.remitos[row][3]
+
+                    html +="<tr><td>"+data.remitos[row][0]+"</td> <td>"+data.remitos[row][1]+"</td><td>"+data.remitos[row][2]+"</td><td align=right>"+data.data[row][3].toFixed(2)+"</td></tr>"
+                };
+                html +="<tr><td colspan=2> </td> <td bgcolor=#B0C4DE> <strong> Total: </strong> </td> <td bgcolor=#B0C4DE align=right style=color:#191970;> <strong>" +tot.toFixed(2) +"</strong></td></tr>"
+           
+              $("#remitos").html(html)
+
+              console.log(remitos)
+            }
+
+        },
+        error: function() {
+            alert('ERROR,  CAGASTE FUEGO')
+        }
+    });
+})
+
+</script>
+{% endblock %}

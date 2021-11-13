@@ -29,12 +29,12 @@ DB_USER = 'root'
 DB_USER_PASSWORD = 'cl1v2%2605'
 #DB_NAME = '/backup/dbnameslist.txt'
 DB_NAME = 'taller'
-BACKUP_PATH = '/dbbackup'
+BACKUP_PATH = 'dbbackup'
  
 # Getting current DateTime to create the separate backup folder like "20180817-123433".
 DATETIME = time.strftime('%Y%m%d-%H%M%S')
 TODAYBACKUPPATH = BACKUP_PATH + '/' + DATETIME
-
+print(os.getcwd())
 print(TODAYBACKUPPATH) 
 
 # Checking if backup folder already exists or not. If not exists will create it.
@@ -43,7 +43,10 @@ try:
 except:
     os.mkdir(TODAYBACKUPPATH)
  
+ 
 # Code for checking if you want to take single database backup or assinged multiple backups in DB_NAME.
+os.chdir("c:/xampp/mysql/data")
+
 print ("checking for databases names file.")
 if os.path.exists(DB_NAME):
     file1 = open(DB_NAME)
@@ -66,7 +69,7 @@ if multi:
    while p <= flength:
        db = dbfile.readline()   # reading database name from file
        db = db[:-1]         # deletes extra line
-       dumpcmd = "mysqldump -h " + DB_HOST + " -u " + DB_USER + " -p" + DB_USER_PASSWORD + " " + db + " > " + pipes.quote(TODAYBACKUPPATH) + "/" + db + ".sql"
+       dumpcmd = "c:/xampp/mysql/bin/mysqldump -h " + DB_HOST + " -u " + DB_USER + " -p" + DB_USER_PASSWORD + " " + db + " > " + pipes.quote(TODAYBACKUPPATH) + "/" + db + ".sql"
        os.system(dumpcmd)
        gzipcmd = "gzip " + pipes.quote(TODAYBACKUPPATH) + "/" + db + ".sql"
        os.system(gzipcmd)

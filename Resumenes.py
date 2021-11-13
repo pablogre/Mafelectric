@@ -1,4 +1,4 @@
-from flask import Blueprint,Flask, render_template, request, redirect, url_for, flash, session
+from flask import Blueprint,Flask, render_template, request, redirect, url_for, flash, session, jsonify
 resumenes = Blueprint('resumenes', __name__)
 from Conexion import conexion,sql 
 from random import randint
@@ -7,6 +7,7 @@ import time
 import datetime
 import os
 import pymysql.cursors 
+import json
 
 # Connection
 #connection=conexion()
@@ -17,6 +18,47 @@ def estoy():
         return render_template('login.html')
 		
 ################################################## NICO
+
+
+@resumenes.route('/ver_caja/', methods = ['GET','POST'])
+def ver_cajas():
+    return render_template('/resumenes/caja.html')
+
+
+@resumenes.route('/caja/', methods = ['GET','POST'] )
+def caja():
+    if request.method == 'POST':
+        connection=conexion()
+        cur = connection.cursor()
+        fe1 = request.form['fe1']
+        fe2 = request.form['fe2']
+
+        print(fe1)
+        print(fe2)
+        query = """select id_ot, clientes.cliente, DATE_FORMAT(fecha_entrega, '%%d/%%m/%%Y') as fecha, importe, descrip 
+                    from o_trabajos  
+                    left join clientes on clientes.id = o_trabajos.id_clie     
+                    where fecha_entrega between %s and %s and estado = 'ENTREGADO' and upper(descrip) not like '%%REMITO%%'
+                    group by id_ot"""
+        params = [fe1,fe2] 
+        cur.execute(query,params)
+        data = cur.fetchall()
+        print(data)
+
+        cur = connection.cursor()
+        query = """select id_ot, clientes.cliente, DATE_FORMAT(fecha_entrega, '%%d/%%m/%%Y') as fecha, importe, descrip 
+                    from o_trabajos  
+                    left join clientes on clientes.id = o_trabajos.id_clie     
+                    where fecha_entrega between %s and %s and estado = 'ENTREGADO' and upper(descrip) like '%%REMITO%%'
+                    group by id_ot"""
+        params = [fe1,fe2] 
+        cur.execute(query,params)
+        remitos = cur.fetchall()
+
+
+        jok = {"type": "ok", "data": data, "remitos": remitos}
+        return jsonify(jok) 
+
 
 @resumenes.route('/iva_ventas/', methods = ['GET','POST'])
 def iva_ventas():
