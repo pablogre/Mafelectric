@@ -1503,6 +1503,8 @@ def abm_admin_ftrab():
         id_ot =  request.form['id_ot']
         importe =  request.form['importe']
         desc_job = request.form['desc_job']
+        remito = request.form['remito']
+
         usu_x = session['us_ta']
         connection=conexion()
         cur = connection.cursor()
@@ -1511,6 +1513,8 @@ def abm_admin_ftrab():
             params = [estado, id_ot, importe, desc_job]
         else:
             fecha_entrega = time.strftime("%Y-%m-%d %H:%M:%S")
+            if remito:
+                desc_job = desc_job +  '  REMITO Nº: '+ str(remito)
             if estado == 'ENTREGADO':
                 if desc_job:
                     query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), fecha_entrega = %s where id_ot = %s"
@@ -1564,28 +1568,44 @@ def edit_admin_ftrab():
 @app.route('/ver_trabajos', methods = ['GET'] )
 def ver_trabajos():
     estado = ''
-    
-    estado =  request.args.get('estado')
+    id_ot = 0
     #recibir paramtro get de la url
+    estado =  request.args.get('estado')
+    id_ot = request.args.get('id_ot')
+    print("nro ord.:", id_ot)
 
-    connection=conexion()
-    cur = connection.cursor()
-    if estado:
-        print('Estado:', estado)
+    if id_ot:
+        print('entro al if')
+        connection=conexion()
+        cur = connection.cursor()
+       
         query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe, fecha_entrega from o_trabajos
-                   left join clientes on clientes.id = o_trabajos.id_clie
-                   where estado = %s  order by fecha desc'''
-        params=[estado]
+                left join clientes on clientes.id = o_trabajos.id_clie
+                where id_ot = %s  order by fecha desc'''
+        params=[int(id_ot)]
         cur.execute(query, params)
         data = cur.fetchall()
         cur.close()        
-    else:
-        query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe, fecha_entrega from o_trabajos
-                   left join clientes on clientes.id = o_trabajos.id_clie
-                   where estado != 'ENTREGADO'  order by fecha desc'''
-        cur.execute(query)
-        data = cur.fetchall()
-        cur.close()
+      
+    else:    
+        connection=conexion()
+        cur = connection.cursor()
+        if estado:
+            print('Estado:', estado)
+            query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe, fecha_entrega from o_trabajos
+                    left join clientes on clientes.id = o_trabajos.id_clie
+                    where estado = %s  order by fecha desc'''
+            params=[estado]
+            cur.execute(query, params)
+            data = cur.fetchall()
+            cur.close()        
+        else:
+            query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe, fecha_entrega from o_trabajos
+                    left join clientes on clientes.id = o_trabajos.id_clie
+                    where estado != 'ENTREGADO'  order by fecha desc'''
+            cur.execute(query)
+            data = cur.fetchall()
+            cur.close()
     
     cur = connection.cursor()
     query = 'select * from estados'

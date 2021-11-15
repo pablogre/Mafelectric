@@ -23,12 +23,19 @@
                 {% endif %}    
             </select>
         </div>
+       
+        <div class="form-group col-md-3"> 
+            <label for="nro_ord">Orden Nº.</label>
+            <input type="text" class="form-control" id="nro_ord">
+        </div>    
+       
         {% if nivel_ta == 'supervisor'%}
             <div class="form-group col-md-3"> 
                 <a href="clientes" class="btn btn-primary" style="float: left; margin-top: 32px;">Clientes</a>
             </div>    
         {% endif %}
-        <div class="form-group col-md-6"> 
+        
+        <div class="form-group col-md-3"> 
             <a href="ver_trabajos" class="btn btn-success" style="float: right; margin-top: 32px;">Inicio</a>
         </div>    
     </div>
@@ -143,6 +150,11 @@
                         <input type="number" class="form-control" id="e_importe" min="0" {% if nivel_ta == 'supervisor' %} disabled {%endif%}>
                     </div>  
                    
+                    <div class="remito form-group col-md-2">
+                        <label for="remito" class="control-label">Remito Nº </label>
+                        <input type="number" class="form-control" id="e_remito" min="0" >
+                    </div>  
+                   
                     <div class="form-group "> 
                         <input type="text" class="form-control" id="e_id_ot"  hidden>
                     </div> 
@@ -167,10 +179,35 @@
 
 {% block script %}
 <script type="text/javascript">
+
+//// BUSCO LA ORDEN DE TRABAJO    
+$('#nro_ord').change( function(){
+    let estado =  $( "#estados" ).val();
+    let id_ot = $('#nro_ord').val();
+    location.href = "../ver_trabajos?estado="+estado+"&id_ot="+id_ot;
+   })
+
+//// OCULTO EL NRO DE REMITO
+if ($('#e_estado').val() == 'ENTREGADO') {
+    $('.remito').show()
+} else {
+    $('.remito').hide()
+}
+
+//// FILTRA LOS ESTADOS
 $('#estados').change(function() { 
     let estado = $( "#estados" ).val();
     location.href = "../ver_trabajos?estado="+estado;
 });
+
+//// MUESTRO PARA CARGAR EL NRO DE REMITO SI CAMBIAN EL ESTADO A FINALIZADO
+$('#e_estado').change(function() {
+   if(  $('#e_estado').val() == 'ENTREGADO') {
+        $('.remito').show() 
+   } else { 
+        $('.remito').hide()
+   }     
+})
 
 $('.guardar').on('click', function() {
     
@@ -178,7 +215,8 @@ $('.guardar').on('click', function() {
         estado: $('#e_estado').val(),
         id_ot: $('#e_id_ot').val(),
         importe: $('#e_importe').val(),
-        desc_job: $('#e_desc_job').val()
+        desc_job: $('#e_desc_job').val(),
+        remito: $('#e_remito').val()
     }
 
     $.ajax({
