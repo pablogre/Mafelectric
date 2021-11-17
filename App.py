@@ -1423,12 +1423,13 @@ def abm_otrab():
     if request.method == 'POST':
         id_ot = request.form['id_ot']
         id_clie = request.form['id_clie']
-        descrip = request.form['descrip']
+        desc_job = request.form['descrip']
         estado = request.form['estado']
         estimado = request.form['estimado']
-        fecha_entrega =  request.form['fecha_e'].strip()
         importe = request.form['importe']
+        remito = request.form['remito']
        
+        usu_x = session['us_ta']
         connection=conexion()
         cur = connection.cursor()
         if str(id_ot) == '0':
@@ -1436,14 +1437,40 @@ def abm_otrab():
             fecha = fecha1[6:10]+'/'+fecha1[3:5]+'/'+fecha1[0:2] + ' '+fecha1[-8:]
             print('fecha1:',fecha1)     
             query = "insert into o_trabajos (id_clie, fecha, descrip, estado, estimado, importe) values(%s,%s,%s,%s,%s,%s)"
-            params = [id_clie, fecha1, descrip, estado, estimado, importe]
+            params = [id_clie, fecha1, desc_job, estado, estimado, importe]
         else:
             fecha = request.form['fecha_i'].strip() 
-            fecha_entrga = request.form['fecha_e'].strip() 
-            print('fecha:',fecha)
-            print('fecha_entrega:',fecha_entrega)
-            query = "update o_trabajos set fecha = %s, descrip = %s, fecha_entrega = %s, estado = %s, estimado = %s, importe = %s where id_ot = %s"
-            params = [fecha, descrip, fecha_entrega, estado, estimado, importe, id_ot]    
+            fecha = time.strftime("%Y-%m-%d %H:%M:%S")
+            if remito:
+                descrip =  ' ENTREGADO REMITO Nº: '+ str(remito)
+            else:
+                descrip = ''
+
+            if estado == 'ENTREGADO':
+                fecha_entrega = time.strftime("%Y-%m-%d %H:%M:%S")
+            
+                if descrip:
+                    query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), fecha_entrega = %s where id_ot = %s"
+                    params = [estado, importe, fecha_entrega, usu_x, descrip, fecha_entrega, id_ot] 
+                else:
+                    descrip = "ENTREGADO"
+                    query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), fecha_entrega = %s where id_ot = %s"
+                    params = [estado, importe, fecha_entrega, usu_x, descrip, fecha_entrega, id_ot] 
+                    # query = "update o_trabajos set estado = %s, importe = %s, fecha_entrega = %s where id_ot = %s"
+                    # params = [estado, importe, fecha_entrega,  id_ot]     
+            else:
+                if descrip:
+                    query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s) where id_ot = %s"    
+                    params = [estado, importe, fecha, usu_x, descrip, id_ot]    
+                else:
+                    query = "update o_trabajos set estado = %s, importe = %s where id_ot = %s"    
+                    params = [estado, importe, id_ot]   
+
+           
+            # print('fecha:',fecha)
+            # print('fecha_entrega:',fecha_entrega)
+            # query = "update o_trabajos set fecha = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), fecha_entrega = %s, estado = %s, estimado = %s, importe = %s where id_ot = %s"
+            # params = [fecha, fecha, usu_x, descrip, fecha_entrega, estado, estimado, importe, id_ot]    
         cur.execute(query,params)
         connection.commit()
         cur.close()
@@ -1514,14 +1541,17 @@ def abm_admin_ftrab():
         else:
             fecha_entrega = time.strftime("%Y-%m-%d %H:%M:%S")
             if remito:
-                desc_job = desc_job +  '  REMITO Nº: '+ str(remito)
+                desc_job = desc_job +  ' ENTREGADO REMITO Nº: '+ str(remito)
             if estado == 'ENTREGADO':
                 if desc_job:
                     query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), fecha_entrega = %s where id_ot = %s"
                     params = [estado, importe, fecha_entrega, usu_x, desc_job, fecha_entrega, id_ot] 
                 else:
-                    query = "update o_trabajos set estado = %s, importe = %s, fecha_entrega = %s where id_ot = %s"
-                    params = [estado, importe, fecha_entrega,  id_ot]     
+                    desc_job = desc_job + "ENTREGADO"
+                    query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s), fecha_entrega = %s where id_ot = %s"
+                    params = [estado, importe, fecha_entrega, usu_x, desc_job, fecha_entrega, id_ot] 
+                    # query = "update o_trabajos set estado = %s, importe = %s, fecha_entrega = %s where id_ot = %s"
+                    # params = [estado, importe, fecha_entrega,  id_ot]     
             else:
                 if desc_job:
                     query = "update o_trabajos set estado = %s, importe = %s, descrip = concat(descrip , chr(13), %s, '--> ' , %s , ': ' , %s) where id_ot = %s"    
@@ -1575,7 +1605,6 @@ def ver_trabajos():
     print("nro ord.:", id_ot)
 
     if id_ot:
-        print('entro al if')
         connection=conexion()
         cur = connection.cursor()
        

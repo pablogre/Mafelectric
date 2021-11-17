@@ -163,7 +163,7 @@
                     </div> 
                     <div class="form-group col-md-4">
                         <label for="fecha_e" class="control-label">Fecha Entrega </label>
-                        <input type="datetime-local" class="form-control" id="e_fecha_e" >
+                        <input type="text" class="form-control" id="e_fecha_e" disabled>
                     </div> 
                     <div class="form-group col-md-4"> 
                         <label for="estado" class="control-label">Estado </label>
@@ -209,6 +209,10 @@
                         <label for="importe" class="control-label">Importe </label>
                         <input type="number" class="form-control" id="e_importe" min="0" {%if session['nivel_ta'] != 'admin'%} disabled {% endif %}>
                     </div>  
+                    <div class="remito form-group col-md-2">
+                        <label for="remito" class="control-label">Remito  Nº </label>
+                        <input type="number" class="form-control" id="e_remito" min="0" >
+                    </div>  
                     <div class="form-group "> 
                         <input type="text" class="form-control" id="e_id_clie"  hidden>
                     </div> 
@@ -237,6 +241,21 @@
 
 {% block script %}
 <script type="text/javascript">
+    
+    if($('#e_estado').val()=="ENTREGADO"){
+        $('.remito').show()
+    } else{
+        $('.remito').hide()
+    }
+
+    $('#e_estado').change( function(){
+        if( $('#e_estado').val() == 'ENTREGADO'){
+            $('.remito').show()
+        } else{
+            $('.remito').hide()
+        }
+        
+    })
 
     function search(v) {
         $.post('/clientes', {
@@ -268,14 +287,14 @@ $('#mymodal .guardar').on('click', function() {
     let datos = {
         id_clie: $('#id_clie').val(),
         fecha_i: $('#fecha_i').val(),
-        fecha_e: $('#fecha_e').val(),
         estimado: $('#estimado').val(),
         estado: $('#estado').val(),
         descrip: $('#descrip').val(),
         id_ot: $('#id_ot').val(),
         importe: $('#importe').val()
+      
     }
-   
+    
     $.ajax({
         url: "../abm_otrab",
         type: "POST",
@@ -315,7 +334,7 @@ function editar(id_ot) {
                 $("#e_descrip").val(datos[3])
                 $("#e_id_clie").val(datos[1])
                 $("#e_importe").val(datos[7]).toString
-
+                $("#e_remito").val()
                 $('#modalEdit').modal("show")
             }
         },
@@ -350,7 +369,8 @@ $('#modalEdit .guardar').on('click', function() {
         estado: $('#e_estado').val(),
         descrip: $('#e_descrip').val(),
         id_ot: $('#e_id_ot').val(),
-        importe: $('#e_importe').val()
+        importe: $('#e_importe').val(),
+        remito: $('#e_remito').val()
     }
    
     $.ajax({
