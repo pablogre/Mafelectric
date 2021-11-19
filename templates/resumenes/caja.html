@@ -100,13 +100,12 @@ $('.ver_caja').on('click', function() {
               for (var row in data.remitos) {
                     tot += data.remitos[row][3]
 
-                    html +="<tr><td>"+data.remitos[row][0]+"</td> <td>"+data.remitos[row][1]+"</td><td>"+data.remitos[row][2]+"</td><td align=right>"+data.data[row][3].toFixed(2)+"</td></tr>"
+                    html +="<tr><td>"+data.remitos[row][0]+"</td> <td>"+data.remitos[row][1]+"</td><td>"+data.remitos[row][2]+"</td><td align=right>"+data.remitos[row][3].toFixed(2)+"</td></tr>"
                 };
                 html +="<tr><td colspan=2> </td> <td bgcolor=#B0C4DE> <strong> Total: </strong> </td> <td bgcolor=#B0C4DE align=right style=color:#191970;> <strong>" +tot.toFixed(2) +"</strong></td></tr>"
            
               $("#remitos").html(html)
 
-              console.log(remitos)
             }
 
         },

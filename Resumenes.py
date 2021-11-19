@@ -43,7 +43,6 @@ def caja():
         params = [fe1,fe2] 
         cur.execute(query,params)
         data = cur.fetchall()
-        print(data)
 
         cur = connection.cursor()
         query = """select id_ot, clientes.cliente, DATE_FORMAT(fecha_entrega, '%%d/%%m/%%Y') as fecha, importe, descrip 
@@ -54,7 +53,7 @@ def caja():
         params = [fe1,fe2] 
         cur.execute(query,params)
         remitos = cur.fetchall()
-
+        print('remitos: ',remitos)
 
         jok = {"type": "ok", "data": data, "remitos": remitos}
         return jsonify(jok) 

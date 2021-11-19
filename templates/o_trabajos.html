@@ -113,6 +113,10 @@
                         <label for="id_ot" class="control-label">Importe </label>
                         <input type="number" class="form-control" id="importe" min="0" value="0" disabled>
                     </div>  
+                    <div class="remito form-group col-md-2">
+                        <label for="remito" class="control-label">Remito  Nº </label>
+                        <input type="number" class="form-control" id="remito" min="0" >
+                    </div>  
                     <div class="form-group "> 
                         <input type="text" class="form-control" id="id_clie" name="id_clie" value="{{cliente.0.3}}" hidden>
                     </div> 
@@ -291,7 +295,8 @@ $('#mymodal .guardar').on('click', function() {
         estado: $('#estado').val(),
         descrip: $('#descrip').val(),
         id_ot: $('#id_ot').val(),
-        importe: $('#importe').val()
+        importe: $('#importe').val(),
+        remito: $('#remito').val()
       
     }
     
