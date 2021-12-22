@@ -1,0 +1,18 @@
+{% extends "layout.html" %}  {% block title %} Pablo Ré - Python Full-Stack Developer {% endblock %} {% block body %}
+<br><br><br><br>
+
+<div class="jumbotron" style="margin-top: 40px;">
+    <h2 style="text-align:center ;"> {{ mensaje }}</h2>
+    <input type="text" name="xurl" id= "xurl" value="{{ url }}" hidden >
+</div>
+
+<script>
+    setTimeout(function(){
+       let volver = document.getElementById("xurl").value
+       window.location.replace(volver);
+    }, 3000);
+</script>
+{% endblock %}
+
+
+

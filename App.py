@@ -3,6 +3,7 @@ from Resumenes import *
 from random import randint
 from Conexion import *
 from mail import send_mail
+from enviar import enviar_mail
 from datetime import datetime, date
 from pdfExample import gen_pdf_int,gen_pdf_fisc,gen_pdf_reci
 import time
@@ -14,7 +15,6 @@ import json
 app = Flask(__name__,static_url_path='/static')
 app.register_blueprint(resumenes)
 app.secret_key = "Secret Key"
-
 
 #connection=conexion()
 
@@ -293,8 +293,16 @@ def insert_cli():
             
             connection=conexion()           
             cur = connection.cursor()
-            query = "INSERT INTO clientes (cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            params = [cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni]
+            query = 'select (max(cl_web) + 58) as cl_web from clientes '
+            cur.execute(query)
+            data_w = cur.fetchone()
+            if data_w:
+                cl_web = data_w[0]
+            else:
+                cl_web = 0   
+            cur = connection.cursor()
+            query = "INSERT INTO clientes (cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni, cl_web) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            params = [cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni, cl_web]
             cur.execute(query, params)
             connection.commit()
             connection.close()
@@ -1373,9 +1381,20 @@ def envio_mail():
             return "HUBO UN ERROR, EL CORREO NO FUE ENVIADO !!!"
    
 
-    
+@app.route('/enviar', methods = ['GET','POST'] )
+def enviar():
+    print("estoy en envio mail")
+    if request.method == 'POST':
+        de = request.form['mail']
+        asunto = request.form['subject']
+        mensaje = request.form['message']
+        try:
+            enviar_mail(de, asunto, mensaje)
+            return 'CORREO ENVIADO CON EXITO !!!'
+        except:
+            return "HUBO UN ERROR, EL CORREO NO FUE ENVIADO"    
 
-    #return render_template('ver_comp.html', fileName= fileName, email= email)   
+     
 
 
 @app.route('/ver_comp', methods = ['GET','POST'] )
@@ -1488,6 +1507,7 @@ def abm_ftrab():
         desc_job = request.form['desc_job']
         id_ot =  request.form['id_ot']
         id_job =  request.form['id_job']
+        usu_ta = session['us_ta'] 
         print('fecha:',fecha)
         connection=conexion()
         cur = connection.cursor()
@@ -1495,8 +1515,8 @@ def abm_ftrab():
             fecha1 = request.form['fecha'].strip()   
             #fecha = fecha1[6:10]+'/'+fecha1[3:5]+'/'+fecha1[0:2] + ' '+fecha1[-8:]
             #print('fecha1:',fecha1)     
-            query = "insert into trabajos (id_clie, fecha, hs_trab, estado, desc_job, id_ot, id_job) values(%s,%s,%s,%s,%s,%s,%s)"
-            params = [id_clie, fecha1, hs_trab, estado, desc_job, id_ot, id_job]
+            query = "insert into trabajos (id_clie, fecha, hs_trab, estado, desc_job, id_ot, id_job, usuario) values(%s,%s,%s,%s,%s,%s,%s,%s)"
+            params = [id_clie, fecha1, hs_trab, estado, desc_job, id_ot, id_job, usu_ta]
             cur.execute(query,params)
             connection.commit()
             
@@ -1590,8 +1610,10 @@ def edit_admin_ftrab():
         params = [id_ot]
         cur.execute(query,params)
         data = cur.fetchall()
-        print(data)
-        jok = {"type": "ok", "data": data}
+        print('DATA: ', data)
+        e_actual = data[0][1]
+        print('e_actual:', e_actual)
+        jok = {"type": "ok", "data": data, "e_actual": e_actual }
         return jsonify(jok) 
 
 
@@ -1620,7 +1642,6 @@ def ver_trabajos():
         connection=conexion()
         cur = connection.cursor()
         if estado:
-            print('Estado:', estado)
             query = '''select id_ot, fecha, descrip, estado, estimado, id_clie, cliente, telefonos, importe, fecha_entrega from o_trabajos
                     left join clientes on clientes.id = o_trabajos.id_clie
                     where estado = %s  order by fecha desc'''
@@ -1635,7 +1656,11 @@ def ver_trabajos():
             cur.execute(query)
             data = cur.fetchall()
             cur.close()
-    
+    if data:
+        e_actual = data[0][3]
+    else:
+        e_actual = estado
+        
     cur = connection.cursor()
     query = 'select * from estados'
     cur.execute(query)
@@ -1645,12 +1670,13 @@ def ver_trabajos():
     connection.close()
     nivel_ta = session['nivel_ta']
     us_ta = session['us_ta']
-    print(nivel_ta)
-    print(data)
-    if estado:
-        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado, us_ta = us_ta)
-    else:
-        return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado, us_ta = us_ta)
+   
+    print('usuario: ', nivel_ta)
+   
+    # if estado:
+    #     return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado, us_ta = us_ta, e_actual = e_actual)
+    # else:
+    return render_template('ver_trabajos.html', data=data, estados = estados, nivel_ta = nivel_ta, esta = estado, us_ta = us_ta, e_actual = e_actual)
 
 @app.route('/ver_fichas_trabajos/<id_ot>', methods = ['GET','POST'] )
 def ver_fichas_trabajos(id_ot):
@@ -1683,6 +1709,27 @@ def ver_fichas_trabajos(id_ot):
     print(data)
     return render_template('ver_fichas_trabajos.html', data=data, estados = estados, id_ot = id_ot, estado_actual=estado_actual, us_ta = us_ta)    
 
+@app.route('/clave_web', methods = ['GET','POST'] )
+def clave_web():
+    connection=conexion()
+    cur = connection.cursor()
+    query = 'select id, cl_web from clientes'
+    cur.execute(query)
+    data = cur.fetchall()
+    cur.close()
+    inicio = 600
+    cl_web = 0
+    for row in data:
+        cur = connection.cursor()
+        id = row[0]
+        inicio = inicio + 58
+        cl_web =  inicio 
+        query = 'update clientes set cl_web = %s where id = %s'
+        params = [cl_web, id]
+        cur.execute(query, params)
+        connection.commit()
+        cur.close()
+    return render_template('login.html')
 
 if __name__ == "__main__":
    

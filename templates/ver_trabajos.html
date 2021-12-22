@@ -134,14 +134,8 @@
                 <div class="row">        
                     <div class="form-group col-md-4"> 
                         <label for="estado" class="control-label">Estado </label>
-                        <select id="e_estado" class="form-control">
-                            {% if estados %} 
-                               <option value="" selected disabled>Seleccione:</option>
-                                {% for estado in estados %}
-                                    <option value="{{estado.1}}">{{estado.1}}</option>
-                                {% endfor %}
-                            {% endif %}    
-                        </select>
+                        <select id="e_estado" class="form-control"></select>
+                        
                     </div> 
                 </div>    
                 <div class="row">
@@ -243,16 +237,55 @@ function editar(id_ot) {
         type: "POST",
         data: datos,
         success: function(data) {
-            console.log(data)
+            console.log('data_ajx',data)
             if (data.type == 'ok') {
                 //location.reload()
                 let datos = data.data[0];
+                e_estado = data.e_actual;
                 titulo =  'Editando Trabajo ' +' Nº: '+ datos[0] 
                 $(".modal-title").text(titulo);
                 $("#e_id_ot").val(datos[0])
-                $("#e_estado").val(datos[1])
                 $("#e_importe").val(datos[2])
 
+                let html = '<option value="" selected disabled>Seleccione:</option>';
+                if("{{session['nivel_ta']}}" == 'admin'){
+                    html += `
+                        {% for estado in estados %}
+                            <option value="{{estado.1}}">{{estado.1}}</option>
+                        {% endfor %}
+                    `;
+                } 
+                else{
+                    if(datos[1] == 'PRESUPUESTAR'){  
+                        html += `
+                        <option value="PRESUPUESTAR" selected>PRESUPUESTAR</option> 
+                        <option value="CANCELADO">CANCELADO</option> 
+                        <option value="EN REPARACIÓN">EN REPARACIÓN</option>`;
+                    }
+                    else if(datos[1] == 'REVISIONAR'){  
+                        html += `<option value="REVISIONAR" selected>REVISIONAR</option>`;
+                    }
+                    else if(datos[1] == 'EN REPARACIÓN'){
+                        html += ` 
+                        <option value="EN REPARACIÓN" selected>EN REPARACIÓN</option> 
+                        <option value="DEMORADO">DEMORADO</option> 
+                        <option value="FINALIZADO" >FINALIZADO</option>`;
+                    }
+                    else if(datos[1] == 'COTIZADO'){
+                        html += ` 
+                        <option value="COTIZADO" selected>COTIZADO</option> 
+                        <option value="EN REPARACIÓN">EN REPARACIÓN</option> 
+                        <option value="CANCELADO">CANCELADO</option>`;
+                    }
+                    else if(datos[1] == 'FINALIZADO'){
+                        html += `
+                        <option value="FINALIZADO" selected>FINALIZADO</option>
+                        <option value="ENTREGADO">ENTREGADO</option>`;
+                    }
+                }          
+                $("#e_estado").html(html);
+                $("#e_estado").val(datos[1])
+               
                 $('#modalEdit').modal("show")
             }
         },

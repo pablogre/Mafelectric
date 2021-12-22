@@ -1,0 +1,6 @@
+una vez que se rompe
+
+1) renombrar DATA  a DATA_OLD
+2) Crear  DATA
+3) Copiar el contenido de la carpeta BACKUP a DATA
+4) Copiar desde  OLD  carpeta  TALLER y   Archivo ibdata1

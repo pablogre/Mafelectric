@@ -19,6 +19,36 @@ def estoy():
 		
 ################################################## NICO
 
+@resumenes.route('/trabajos/', methods = ['GET','POST'])
+def trabajos():
+    connection=conexion()
+    cur = connection.cursor()
+    query = "select usuario from usuarios"
+    cur.execute(query)
+    usuarios = cur.fetchall()
+    return render_template('/resumenes/trabajos.html', usuarios = usuarios)
+
+
+@resumenes.route('/ver_works_usu/', methods = ['GET','POST'])
+def ver_works_usu():
+    if request.method == 'POST':
+        fecha1 = request.form['fecha'].strip()
+        fecha = fecha1[:4] +'-'+fecha1[5:7]+'-'+fecha1[8:]
+        filtro = '%'
+        fecha =  filtro + fecha + filtro 
+        usuario =   filtro + request.form['usuario'].strip() + filtro 
+        print(fecha)
+        print(usuario)
+        connection=conexion()
+        cur = connection.cursor()
+        query = "select id_ot, desc_job, hs_trab from trabajos where fecha like %s and usuario like %s"
+        params = [fecha,usuario]
+        cur.execute(query,params)
+        data = cur.fetchall()
+        print(data)
+        jok = {"type": "ok", "data": data}
+        return jsonify(jok) 
+
 
 @resumenes.route('/ver_caja/', methods = ['GET','POST'])
 def ver_cajas():

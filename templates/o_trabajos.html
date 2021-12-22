@@ -173,34 +173,7 @@
                         <label for="estado" class="control-label">Estado </label>
                         <!-- <input type="text" class="form-control" id="e_estado"  > -->
                         <select id="e_estado" class="form-control">
-                            {% if estados and session['nivel_ta'] == 'admin' %} 
-                               <option value="" selected disabled>Seleccione:</option>
-                                {% for estado in estados %}
-                                    <option value="{{estado.1}}">{{estado.1}}</option>
-                                {% endfor %}
-                            {% else %}
-                                <option value="" selected disabled>Seleccione:</option>
-                                {% if data %}
-                                    {% if data.0.3 == 'PRESUPUESTAR' %}  
-                                        <option value="PRESUPUESTAR" selected>PRESUPUESTAR</option> 
-                                        <option value="CANCELADO">CANCELADO</option> 
-                                        <option value="EN REPARACIÓN">EN REPARACIÓN</option> 
-                                    {% endif %} 
-                                    {% if data.0.3 == 'REVISIONAR' %}  
-                                        <option value="REVISIONAR" selected>REVISIONAR</option> 
-                                    {% endif %}  
-                                    {% if data.0.3 == 'EN REPARACIÓN' %}  
-                                        <option value="EN REPARACIÓN">EN REPARACIÓN</option> 
-                                        <option value="DEMORADO">DEMORADO</option> 
-                                        <option value="FINALIZADO" selected>FINALIZADO</option>  
-                                    {% endif %} 
-                                    {% if data.0.3 == 'FINALIZADO' %}  
-                                        <option value="FINALIZADO" selected>FINALIZADO</option>
-                                        <option value="ENTREGADO">ENTREGADO</option> 
-                                    {% endif %}   
-                                {% endif %}  
-
-                            {% endif %}    
+                           
                         </select>
                     </div> 
                 </div>    
@@ -334,12 +307,52 @@ function editar(id_ot) {
                 $("#e_id_ot").val(datos[0])
                 $("#e_fecha_i").val(setFechas(datos[2]))
                 $("#e_fecha_e").val(setFechas(datos[5]))
-                $("#e_estado").val(datos[4])
                 $("#e_estimado").val(datos[6])
                 $("#e_descrip").val(datos[3])
                 $("#e_id_clie").val(datos[1])
                 $("#e_importe").val(datos[7]).toString
                 $("#e_remito").val()
+
+                let html = '<option value="" selected disabled>Seleccione:</option>';
+                if("{{session['nivel_ta']}}" == 'admin'){
+                    html += `
+                        {% for estado in estados %}
+                            <option value="{{estado.1}}">{{estado.1}}</option>
+                        {% endfor %}
+                    `;
+                } 
+                else{
+                    if(datos[4] == 'PRESUPUESTAR'){  
+                        html += `
+                        <option value="PRESUPUESTAR" selected>PRESUPUESTAR</option> 
+                        <option value="CANCELADO">CANCELADO</option> 
+                        <option value="EN REPARACIÓN">EN REPARACIÓN</option>`;
+                    }
+                    else if(datos[4] == 'REVISIONAR'){  
+                        html += `<option value="REVISIONAR" selected>REVISIONAR</option>`;
+                    }
+                    else if(datos[4] == 'EN REPARACIÓN'){
+                        html += ` 
+                        <option value="EN REPARACIÓN" selected>EN REPARACIÓN</option> 
+                        <option value="DEMORADO">DEMORADO</option> 
+                        <option value="FINALIZADO" >FINALIZADO</option>`;
+                    }
+                    else if(datos[4] == 'COTIZADO'){
+                        html += ` 
+                        <option value="COTIZADO" selected>COTIZADO</option> 
+                        <option value="EN REPARACIÓN">EN REPARACIÓN</option> 
+                        <option value="CANCELADO">CANCELADO</option>`;
+                    }
+                    else if(datos[4] == 'FINALIZADO'){
+                        html += `
+                        <option value="FINALIZADO" selected>FINALIZADO</option>
+                        <option value="ENTREGADO">ENTREGADO</option>`;
+                    }
+                }          
+                $("#e_estado").html(html);
+                $("#e_estado").val(datos[4])
+
+
                 $('#modalEdit').modal("show")
             }
         },
