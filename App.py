@@ -6,6 +6,7 @@ from mail import send_mail
 from enviar import enviar_mail
 from datetime import datetime, date
 from pdfExample import gen_pdf_int,gen_pdf_fisc,gen_pdf_reci
+#from mensejes import mensaje   
 import time
 import datetime
 import os
@@ -317,10 +318,90 @@ def insert_cli():
         session['clientes_sel'] = 0
         return redirect(url_for('sele_clie_fa'))   
 
+
  
 #this is our update route where we are going to update our employee
 @app.route('/update_cli', methods = ['GET', 'POST'])
 def update_cli():
+    if not session.get('id_empresa'):
+        return render_template('login.html')
+
+    if request.method == 'POST':
+        id = request.form['id']
+        cliente = request.form['cliente']
+        cliente = cliente.upper()
+        dni = request.form['dni']
+        domicilio = request.form['domicilio']
+        domicilio = domicilio.upper()
+        telefonos = request.form['telefonos']
+        email = request.form['email']
+        cuit = request.form['cuit']
+        iva = request.form['civa']
+        localidad = request.form['localidad']
+        localidad = localidad.upper()
+        cp = request.form['cp']
+        print(iva)
+        if iva != '5': # 5 Consumidor Final
+            ### valido cuit del cliente
+            esbueno =  esCUITValida(cuit)
+            print(esbueno)
+            if not esbueno[0]:
+                flash('ERROR El C.U.I.T. : '+ esbueno[1] + " ES INVALIDO REGISTRO CANCELADO !!")
+                return redirect(url_for('clientes'))
+            else:
+                ### busco si el cuit ya existe
+                if len(cuit) > 0:
+                    connection=conexion()
+                    cur = connection.cursor()
+                    query = """
+                            SELECT cliente , id
+                            FROM clientes 
+                            where cuit = %s and id <> %s and id_empresa = %s
+                    """
+                    params = [cuit, id, session['id_empresa']]
+                    cur.execute(query,params)
+                    data = cur.fetchone()
+                    
+                    connection.close()
+                    print(data)
+                    #time.sleep(5) ## detiene el sistema 5 segundos
+                    if data !=  None:
+                        for row in data:
+                            print(data[0])
+                            print(data[1])
+                            print('id: ' + id)
+                            cliente = data
+                        
+                            flash('ERROR El C.U.I.T. PERTENECE A: '+ cliente[0] + " NO SE MODIFICO EL REGISTRO !!")
+                            return redirect(url_for('clientes'))
+            
+        connection=conexion()
+        cur = connection.cursor()
+        query= """ 
+                UPDATE clientes
+                SET cliente = %s,
+                domicilio = %s,
+                telefonos = %s,
+                email = %s,
+                cuit = %s,
+                iva = %s,
+                localidad = %s,
+                cp = %s,
+                dni = %s
+                WHERE id = %s
+                """
+        params = [cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, dni, id]        
+        cur.execute(query, params)
+        connection.commit()
+        flash('Registro modificado con Exito !')
+        connection.close()
+
+        return redirect(url_for('clientes'))
+    
+    
+
+@app.route('/update_cli_ajax', methods = ['GET', 'POST'])
+def update_cli_ajax():
     if not session.get('id_empresa'):
         return render_template('login.html')
 
@@ -394,9 +475,10 @@ def update_cli():
         flash('Registro modificado con Exito !')
         connection.close()
 
-        return redirect(url_for('clientes'))
+    jok = {"type": "ok", "status":200  }
+    return jsonify(jok) 
     
-    
+       
  
  
 #This route is for deleting our clientes
@@ -412,6 +494,57 @@ def delete_cli(id):
     flash('Registro borrado !')
     connection.close()
     return redirect(url_for('clientes'))
+
+
+
+
+## Borro clientes con Ajax
+@app.route('/delete_cli_ajax', methods = ['GET', 'POST'])
+def delete_cli_ajax():
+    if not session.get('id_empresa'):
+        return render_template('login.html')
+    id = request.form['id']
+    connection=conexion()
+    cur = connection.cursor()
+    cur.execute('DELETE FROM clientes WHERE id = {0}'.format(id))
+    connection.commit()
+    flash('Registro borrado !')
+    connection.close()
+    jok = {"type": "ok", "status":200  }
+    return jsonify(jok) 
+
+
+@app.route('/edit_clie_ajax', methods = ['GET','POST'])
+def edit_clie_ajax():
+    if not session.get('id_empresa'):
+        return render_template('login.html')
+    
+    id_empresa = session['id_empresa']
+    
+    connection=conexion()
+    cur = connection.cursor()
+    cur.execute('SELECT * FROM cdiva order by codigo')
+    data_iva = cur.fetchall()
+    cur.close()
+
+    id = request.form['id']
+    cur = connection.cursor()
+    query = 'select * from clientes where id = %s and id_empresa = %s'     
+            
+    params=[id, id_empresa]
+    cur.execute(query, params)
+    data = cur.fetchone()
+    cur.close()
+    print(data)              
+    session['clientes_sel'] = 0
+    connection.close()
+
+    jok = {"type": "ok", "clientes": data, "civa":data_iva}
+    return jsonify(jok)
+    
+ 
+ 
+
  
 @app.route('/registrar', methods=['GET','POST'])
 def registrar():
@@ -1579,6 +1712,19 @@ def abm_admin_ftrab():
                 else:
                     query = "update o_trabajos set estado = %s, importe = %s where id_ot = %s"    
                     params = [estado, importe, id_ot]   
+        
+        ########## para enviar whatsapp ###########
+        '''
+        if estado =='FINALIZADO':
+            cur = connection.cursor()
+            query = 'select id_ot,clientes.telefonos from o_trabajos left join clientes on clientes.id = o_trabajos.id_clie'
+            cur.execute(query,params)
+            data = cur.fetchone()
+            if data:
+                telefono = data[1]
+                mensaje ='Señor Cliente, Mafelectric le informa que la Reparación de su Artefacto esta Terminada' + '\n' + 'Por favor pase a Retirarlo, Muchas Gracias ...' 
+                mensaje(telefono,mensaje, hora, min)
+        '''
 
         cur.execute(query,params)
         connection.commit()
@@ -1734,7 +1880,7 @@ def clave_web():
 if __name__ == "__main__":
    
     # pongo en server en modo desarrollo
-    app.run('0.0.0.0',debug=True)
+    app.run('0.0.0.0', port=5000, debug=True)
     
     # pongo en server en modo producción
     #from waitress import serve
