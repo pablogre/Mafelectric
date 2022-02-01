@@ -6,9 +6,8 @@ from mail import send_mail
 from enviar import enviar_mail
 from datetime import datetime, date
 from pdfExample import gen_pdf_int,gen_pdf_fisc,gen_pdf_reci
-#from mensejes import mensaje   
+import pywhatkit   
 import time
-import datetime
 import os
 import pymysql.cursors 
 import json
@@ -1712,23 +1711,37 @@ def abm_admin_ftrab():
                 else:
                     query = "update o_trabajos set estado = %s, importe = %s where id_ot = %s"    
                     params = [estado, importe, id_ot]   
-        
-        ########## para enviar whatsapp ###########
-        '''
-        if estado =='FINALIZADO':
-            cur = connection.cursor()
-            query = 'select id_ot,clientes.telefonos from o_trabajos left join clientes on clientes.id = o_trabajos.id_clie'
-            cur.execute(query,params)
-            data = cur.fetchone()
-            if data:
-                telefono = data[1]
-                mensaje ='Señor Cliente, Mafelectric le informa que la Reparación de su Artefacto esta Terminada' + '\n' + 'Por favor pase a Retirarlo, Muchas Gracias ...' 
-                mensaje(telefono,mensaje, hora, min)
-        '''
 
         cur.execute(query,params)
         connection.commit()
-        cur.close()
+        cur.close()   
+        
+     
+        ########## para enviar whatsapp ###########
+        if estado =='FINALIZADO':
+            try:
+                print("id_ot: ", id_ot)
+                cur = connection.cursor()
+                query = 'select id_ot,clientes.telefonos from o_trabajos left join clientes on clientes.id = o_trabajos.id_clie where id_ot = %s'
+                params =[id_ot] 
+                cur.execute(query,params)
+                data = cur.fetchone()
+                print(data)
+                if data:
+                    hoy = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    hora = int(hoy[11:13])
+                    minuto = int(hoy[14:16]) + 1
+                    telefono = "+549"+data[1].strip()
+                    print('Telefono', telefono)
+                    message ="Señor Cliente, Mafelectric le informa que la Reparación de su Artefacto, ingresado con Nº de orden: " + str(data[0]) + " esta finalizada \n" + "Por favor pase a Retirarlo, Muchas Gracias ... \n" + "También puede seguir el el estado de sus reparaciones ingresando a http://mafelectric.com.ar"
+                    
+                    #sendwhatmsg(phone_no: str, message: str, time_hour: int, time_min: int, wait_time: int = 15, tab_close: bool = False, close_time: int = 3) -> None
+                    pywhatkit.sendwhatmsg( telefono, message,  hora,  minuto, 15,  True, 3)
+                cur.close()
+            except:
+                print('NO ANDA LPM')    
+      
+        
         jok = {"type": "ok", "status":200  }
         return jsonify(jok)
 
