@@ -230,8 +230,7 @@ def clientes():
     params=[filtro, id_empresa]
     cur.execute(query, params)
     data = cur.fetchall()
-    cur.close()
-    print(data)              
+    cur.close()             
     session['clientes_sel'] = 0
     connection.close()
 
@@ -256,6 +255,7 @@ def insert_cli():
             domicilio = request.form['domicilio']
             domicilio = domicilio.upper()
             telefonos = request.form['telefonos']
+            wapp = request.form['wapp']
             email = request.form['email']
             cuit = request.form['cuit']
             iva = request.form['iva']
@@ -300,22 +300,24 @@ def insert_cli():
                 cl_web = data_w[0]
             else:
                 cl_web = 0   
+
             cur = connection.cursor()
-            query = "INSERT INTO clientes (cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni, cl_web) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
-            params = [cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, id_empresa, dni, cl_web]
+            query = "INSERT INTO clientes (cliente, domicilio, telefonos, whatsapp, email, cuit, iva, localidad, cp, id_empresa, dni, cl_web) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"
+            params = [cliente, domicilio, telefonos, wapp, email, cuit, iva, localidad, cp, id_empresa, dni, cl_web]
             cur.execute(query, params)
             connection.commit()
             connection.close()
             flash('Cliente Agregado Correctamente')
         except:
-             flash('YA EXISTE, VERIFIQUE CÓDIGO O CLIENTE  OPERACION CANCELADA ')
+            flash('YA EXISTE, VERIFIQUE CÓDIGO O CLIENTE  OPERACION CANCELADA ')
+       
 
-    #esta var es para saber si viene de clientes_sel.html 
-    if  session['clientes_sel'] == 0:
-        return redirect(url_for('clientes'))
-    else:
-        session['clientes_sel'] = 0
-        return redirect(url_for('sele_clie_fa'))   
+        #esta var es para saber si viene de clientes_sel.html 
+        if  session['clientes_sel'] == 0:
+            return redirect(url_for('clientes'))
+        else:
+            session['clientes_sel'] = 0
+            return redirect(url_for('sele_clie_fa'))   
 
 
  
@@ -412,6 +414,7 @@ def update_cli_ajax():
         domicilio = request.form['domicilio']
         domicilio = domicilio.upper()
         telefonos = request.form['telefonos']
+        wapp = request.form['wapp'] 
         email = request.form['email']
         cuit = request.form['cuit']
         iva = request.form['iva']
@@ -460,6 +463,7 @@ def update_cli_ajax():
                 SET cliente = %s,
                 domicilio = %s,
                 telefonos = %s,
+                whatsapp = %s,
                 email = %s,
                 cuit = %s,
                 iva = %s,
@@ -468,7 +472,7 @@ def update_cli_ajax():
                 dni = %s
                 WHERE id = %s
                 """
-        params = [cliente, domicilio, telefonos, email, cuit, iva, localidad, cp, dni, id]        
+        params = [cliente, domicilio, telefonos, wapp, email, cuit, iva, localidad, cp, dni, id]        
         cur.execute(query, params)
         connection.commit()
         flash('Registro modificado con Exito !')
@@ -1720,23 +1724,23 @@ def abm_admin_ftrab():
         ########## para enviar whatsapp ###########
         if estado =='FINALIZADO':
             try:
-                print("id_ot: ", id_ot)
                 cur = connection.cursor()
                 query = 'select id_ot,clientes.telefonos from o_trabajos left join clientes on clientes.id = o_trabajos.id_clie where id_ot = %s'
                 params =[id_ot] 
                 cur.execute(query,params)
                 data = cur.fetchone()
-                print(data)
+              
                 if data:
                     hoy = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     hora = int(hoy[11:13])
                     minuto = int(hoy[14:16]) + 1
                     telefono = "+549"+data[1].strip()
-                    print('Telefono', telefono)
                     message ="Señor Cliente, Mafelectric le informa que la Reparación de su Artefacto, ingresado con Nº de orden: " + str(data[0]) + " esta finalizada \n" + "Por favor pase a Retirarlo, Muchas Gracias ... \n" + "También puede seguir el el estado de sus reparaciones ingresando a http://mafelectric.com.ar"
-                    
                     #sendwhatmsg(phone_no: str, message: str, time_hour: int, time_min: int, wait_time: int = 15, tab_close: bool = False, close_time: int = 3) -> None
-                    pywhatkit.sendwhatmsg( telefono, message,  hora,  minuto, 15,  True, 3)
+                    #pywhatkit.sendwhatmsg( telefono, message,  hora,  minuto, 15,  True, 3)
+                  
+                    #sendwhatmsg_instantly(phone_no: str, message: str, wait_time: int = 15, tab_close: bool = False, close_time: int = 3) -> None
+                    pywhatkit.sendwhatmsg_instantly( telefono, message,  hora,  True, 4)
                 cur.close()
             except:
                 print('NO ANDA LPM')    

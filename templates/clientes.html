@@ -50,8 +50,6 @@
                             </td>
                         </tr>
 
-                        
-
                         {% endfor %}
                     </tbody>
 
@@ -88,6 +86,10 @@
                                 <div class="form-group">
                                     <label>Telefonos:</label>
                                     <input type="text" class="form-control" name="telefonos">
+                                </div>
+                                <div class="form-group">
+                                    <label>WhatsApp:</label>
+                                    <input type="text" class="form-control" name="wapp">
                                 </div>
                                 <div class="form-group">
                                     <label>E-mail:</label>
@@ -189,6 +191,11 @@
                 <div class="form-group">
                     <label>Teléfonos:</label>
                     <input type="text" class="form-control" name="telefonos" id="telefonos">
+                </div>
+
+                <div class="form-group">
+                    <label>WhatsApp:</label>
+                    <input type="text" class="form-control" name="wapp" id ="wapp">
                 </div>
 
                 <div class="form-group">
@@ -312,6 +319,7 @@ $('.guardar').on('click', function(){
         dni : $('#dni').val(),
         domicilio : $('#domicilio').val(),
         telefonos : $('#telefonos').val(),
+        wapp : $('#wapp').val(),
         email : $('#email').val(),
         cuit : $('#cuit').val(),
         iva : $('#civa').val(),
@@ -357,6 +365,7 @@ function editar(id) {
                 $("#dni").val(clientes[10]);
                 $("#domicilio").val(clientes[2]);
                 $("#telefonos").val(clientes[3]);
+                $("#wapp").val(clientes[12]);
                 $("#email").val(clientes[4]);
                 $("#cuit").val(clientes[5]);
                 $("#civa").val(clientes[6]);
