@@ -293,7 +293,7 @@ def insert_cli():
             
             connection=conexion()           
             cur = connection.cursor()
-            query = 'select (max(cl_web) + 58) as cl_web from clientes '
+            query = 'select ((max(id) + 1) * 58) as cl_web from clientes '
             cur.execute(query)
             data_w = cur.fetchone()
             if data_w:
