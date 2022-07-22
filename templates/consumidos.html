@@ -1,0 +1,194 @@
+{% extends "layout.html" %} {% include "header.html" %} {% block title %} Artículos {% endblock %} {% block body %}
+<div class="container">
+    <div class="row">
+        <div class="col md-12">
+            <div class="jumbotron p-3">
+                <h3>Articulos Consumidos Orden Nro.: {{id_ot}}  </h3>
+                <h3>Cliente: {{cliente.0}} </h3>
+                <div class="form-group">
+                    <label for="exampleFormControlTextarea1">Ttabajos</label>
+                    <textarea class="form-control" id="exampleFormControlTextarea1" rows="3" disabled>{{cliente.1}}</textarea>
+                </div>
+            </div>  
+        </div> 
+    </div>    
+    <div class="row">
+        <div class="col md-8">
+            <div class="form-group">
+                <label>Repuesto</label>
+                <select class="form-control" name="articulo" id="articulo">
+                    {% if articulos %} 
+                        <option value="" selected disabled>Seleccione:</option>
+                            {% for articulo in articulos %}
+                            <option value="{{articulo.0}}" >{{articulo.1}}</option>
+                            {% endfor %}
+                    {% endif %} 
+                </select>
+            </div>  
+        </div>      
+        <div class="col md-2">
+            <label>Cantidad:</label>
+            <input type="number" class="form-control" name="cantidad" id="cantidad" value="1" min="0">
+        </div >
+        <div class="col md-2">
+            <button  style="margin-top:30px" type="button" class="btn btn-success btn-xs " onclick="agregar( {{id_ot}} )">Agregar</button> 
+        </div>          
+    </div>  
+
+    <div class="row">              
+        <div class="col md-12">
+            <div class="jumbotron p-3">        
+
+                <br>
+                {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {% if 'CANCELADA' in message %}
+                <!-- SI ESTA LA PALABRA EXISTE EN EL MENSAJE MUESTO LA CLASE WARNING SI NO SUCCESS-->
+                <div class="alert alert-danger alert-dismissable" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                                    <span aria-hidden="true">x</span>
+                                </button> {{message}}
+                </div>
+                {% else %}
+                <div class="alert alert-success alert-dismissable" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="close">
+                                    <span aria-hidden="true">x</span>
+                    </button> {{message}}
+                </div>
+                {% endif %} {% endfor %} {% endif %} {% endwith %}
+
+                <table class="table table-hover table-active table-sm">
+                    <tr>
+                        <th>ID Artículo</th>
+                        <th>Artículo</th>
+                        <th>Cantidad</th>
+                        <th>Acción</th>
+                    </tr>
+
+                    <tbody id="search_art">
+
+                        {% for row in consumidos %}
+
+                        <tr>
+                            <td>{{row.0}} </td>    
+                            <td>{{row.1}} </td>
+                            <td>{{row.2}}</td>
+                            <td>
+                                <!--  <a href="/update_art/{{row.0}}" class="btn btn-default btn-xs" data-toggle="modal" data-target="#modaledit{{row.0}}"> <img src="/static/images/edit.png" alt="Editar" width="24" height="24"> </a>  -->
+                                <!-- <a href="/delete_cli/{{row.0}}" class="btn btn-default btn-xs" onclick="return confirm('Borra el Registro ?')"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></a> -->
+                                <!-- <button class="btn btn-default btn-xs" data-toggle="modal" data-target="#borrar{{row.0}}"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button> -->
+                                <button  type="button" class="btn btn-default btn-xs" onclick="borrar( {{row.0}}, {{row.2}}, {{row.4}} )"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button> 
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>    
+    </div>
+</div>
+
+
+
+<div id="borrar" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Borra el Registro ?</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="hidden" id="id_art">
+                    <input type="hidden" id="cantidad">
+                    <input type="hidden" id="id_consu">
+                    <button class="btn btn-primary" onclick="borrar2()" type="submit">borrar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script type="text/javascript">
+
+    function search(v) {
+            $.post('/articulos', {
+                buscar: v
+            }, function(data) {
+                $('#search_art').html(data);
+            });
+        }
+    
+    $('#estados').change(function() { 
+        let estado = $( "#estados" ).val();
+        location.href = "../ver_trabajos?estado="+estado;
+    });
+    
+    function agregar(id_ot) {
+        let datos = { 'id_art': $("#articulo").val(),
+                      'id_ot': id_ot,
+                      'cantidad': $("#cantidad").val()
+                    }
+        if($("#articulo").val() == null)  {
+            swal("Seleccione un Repuesto !", "", "warning");
+            return
+        }
+                  
+        $.ajax({
+            url: "../agregar_consumidos",
+            type: "POST",
+            data: datos,
+           
+            success: function(data) {
+                console.log(data)
+                if (data.type == 'ok') {
+                    location.reload()
+                }
+            },
+            error: function() {
+                alert('ERROR,  CAGASTE FUEGO')
+            }
+        });
+
+    }
+    
+    function borrar(id_art, cantidad, id_consu) {
+        let datos = { 'id_art': id_art, 
+                      'cantidad': cantidad,
+                      'id_consu':id_consu
+                    }
+            $("#id_art").val(id_art)
+            $("#cantidad").val(cantidad)
+            $("#id_consu").val(id_consu)
+            $('#borrar').modal("show")
+        }
+       
+    
+    function borrar2() {
+        let datos = { 'id_art': $("#id_art").val(),
+                      'cantidad': $("#cantidad").val(),
+                      'id_consu': $("#id_consu").val()
+                    }
+        $.ajax({
+            url: "../delete_consumidos",
+            type: "POST",
+            data: datos,
+           
+            success: function(data) {
+                console.log(data)
+                if (data.type == 'ok') {
+                    //$('#borrar').modal("hide")
+                    location.reload()
+                }
+            },
+            error: function() {
+                alert('ERROR,  CAGASTE FUEGO')
+            }
+        });
+    }
+</script>
+{% endblock %}        

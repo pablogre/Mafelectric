@@ -334,8 +334,10 @@ function editar(id_ot) {
                     else if(datos[4] == 'EN REPARACIÓN'){
                         html += ` 
                         <option value="EN REPARACIÓN" selected>EN REPARACIÓN</option> 
-                        <option value="DEMORADO">DEMORADO</option> 
-                        <option value="FINALIZADO" >FINALIZADO</option>`;
+                        <option value="DEMORADO">DEMORADO</option> `
+                        if("{{session['nivel_ta']}}" != 'supervisor'){
+                            html += ` <option value="FINALIZADO" >FINALIZADO</option>`
+                        };
                     }
                     else if(datos[4] == 'COTIZADO'){
                         html += ` 

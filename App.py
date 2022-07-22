@@ -750,13 +750,15 @@ def insert_art():
                 costo = request.form['costo']
                 precio1 = request.form['precio1']
                 precio2 = request.form['precio2']
+                stock = request.form['stock']
+                st_min = request.form['st_min']
                 iva = request.form['iva']
                 id_empresa = session['id_empresa']
 
                 connection=conexion()
                 cur = connection.cursor()
-                query = 'insert into articulos (codigo, articulo, id_rubro, costo, precio1, precio2, iva, id_empresa) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)'
-                params = [codigo, articulo, id_rubro, costo, precio1, precio2, iva, id_empresa]
+                query = 'insert into articulos (codigo, articulo, id_rubro, costo, precio1, precio2, stock, st_min, iva, id_empresa) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+                params = [codigo, articulo, id_rubro, costo, precio1, precio2, stock, st_min, iva, id_empresa]
                 print(params)
                 cur.execute(query,params)
                 connection.commit()
@@ -786,6 +788,8 @@ def update_art():
         costo = request.form['costo']
         precio1 = request.form['precio1']
         precio2 = request.form['precio2']
+        stock = request.form['stock']
+        st_min = request.form['st_min']
         iva = request.form['iva']
     
         connection=conexion()
@@ -798,9 +802,11 @@ def update_art():
                 costo = %s,
                 precio1 = %s,
                 precio2 = %s,
+                stock = %s,
+                st_min = %s,
                 iva = %s
             WHERE id_art = %s
-        """, (codigo, articulo, id_rubro, costo, precio1, precio2, iva, id_art))
+        """, (codigo, articulo, id_rubro, costo, precio1, precio2, stock, st_min, iva, id_art))
         flash('Registro modificado con Exito !')
         connection.commit()
         connection.close()
@@ -1829,7 +1835,7 @@ def ver_trabajos():
     cur.execute(query)
     estados = cur.fetchall()
     cur.close()
-
+   
     connection.close()
     nivel_ta = session['nivel_ta']
     us_ta = session['us_ta']
@@ -1844,6 +1850,7 @@ def ver_trabajos():
 @app.route('/ver_fichas_trabajos/<id_ot>', methods = ['GET','POST'] )
 def ver_fichas_trabajos(id_ot):
     connection=conexion()
+
     cur = connection.cursor()
     query = '''select id_ot, desc_job, hs_trab, id_job, id_clie, estado, fecha from trabajos 
                where id_ot = %s  order by fecha desc'''
@@ -1893,6 +1900,99 @@ def clave_web():
         connection.commit()
         cur.close()
     return render_template('login.html')
+
+
+@app.route('/consumidos/<id_ot>', methods = ['GET','POST'] )
+def consumidos(id_ot):
+    connection=conexion()
+    
+    cur = connection.cursor()
+    query = '''select consumidos.id_art, articulos.articulo, consumidos.cantidad, consumidos.id_ot, consumidos.id_consu 
+               from consumidos 
+               left join articulos on articulos.id_art = consumidos.id_art
+               where consumidos.id_ot = %s'''
+
+    params = [id_ot]
+    cur.execute(query, params)
+    consumidos = cur.fetchall()
+    cur.close()
+    print(consumidos)
+
+    cur = connection.cursor()
+    query = 'select id_art, articulo from articulos'
+    cur.execute(query)
+    articulos = cur.fetchall()
+    cur.close()
+  
+    cur = connection.cursor()
+    query = 'select clientes.cliente, o_trabajos.descrip from o_trabajos left join clientes on clientes.id = o_trabajos.id_clie where o_trabajos.id_ot = %s'
+    params = [id_ot]
+    cur.execute(query, params)
+    cliente = cur.fetchone()
+    cur.close()
+  
+    return render_template('consumidos.html', consumidos = consumidos, articulos = articulos, id_ot = id_ot, cliente = cliente)
+
+
+
+
+@app.route('/delete_consumidos', methods = ['GET', 'POST'])
+def delete_consumidos():
+    if not session.get('id_empresa'):
+        return render_template('login.html')
+    id_art = request.form['id_art']
+    cant = request.form['cantidad']
+    id_consu = request.form['id_consu']
+
+    connection=conexion()
+    cur = connection.cursor()
+    query = 'delete from consumidos WHERE id_consu = %s'
+    params = [id_consu]
+    print('consumidos :',params)
+    cur.execute(query,params)
+    connection.commit()
+    ### Agrego al Stock la cantidad del art. Borrado
+    query = "update articulos set stock = stock + %s where id_art = %s "
+    params = [cant, id_art]
+    cur.execute(query,params)
+    connection.commit()
+    
+    flash('Registro borrado !')
+    connection.close()
+
+    jok = {"type": "ok", "status":200  }
+    return jsonify(jok) 
+
+
+
+@app.route('/agregar_consumidos', methods = ['GET', 'POST'])
+def agregar_consumidos():
+    if not session.get('id_empresa'):
+        return render_template('login.html')
+    
+    id_art = request.form['id_art']
+    cantidad = request.form['cantidad']
+    id_ot = request.form['id_ot']
+
+    connection=conexion()
+    cur = connection.cursor()
+    query = "insert into consumidos (id_art, cantidad, id_ot) values(%s,%s,%s)"
+    params = [id_art, cantidad, id_ot]
+    print('insertar :',params)
+    cur.execute(query,params)
+    connection.commit()
+    ### Descuento el Stock del articulo consumido
+    query = "update articulos set stock = stock - %s where id_art = %s "
+    params = [cantidad, id_art]
+    cur.execute(query,params)
+    connection.commit()
+    
+    #flash('Registro borrado !')
+    connection.close()
+
+    jok = {"type": "ok", "status":200  }
+    return jsonify(jok) 
+
 
 if __name__ == "__main__":
    

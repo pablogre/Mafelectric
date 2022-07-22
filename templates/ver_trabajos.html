@@ -58,20 +58,28 @@
             <div class="row">
                 {% if row.3 != 'ENTREGADO' %}
                 <div class="col-md-8"></div>
-                {% if nivel_ta == 'admin' or nivel_ta == 'supervisor'%}
-                <div class="col-md-2 float-right">
-                    <br>
-                    <button  type="button" class="btn btn-primary float-right" onclick="editar( {{row.0}} )">Editar</button>      
+                <div class="col-md-1 float-right">
+                    <br>    
+                    {% if row.3 != 'FINALIZADO' %}
+                    <a href="/ver_fichas_trabajos/{{ row.0 }}"  class="editBtn btn btn-primary ">Trabajos</a>      
+                    {% endif %} 
+                    
                 </div>
-                {% endif %}    
                 <div class="col-md-2 float-right">
                     <br>    
-                    {% if row.3 != 'FINALIZADO'%}
-                        <a href="/ver_fichas_trabajos/{{ row.0 }}" class="editBtn btn btn-primary float-right">Trabajos</a>      
+                    {% if row.3 != 'FINALIZADO' or nivel_ta == 'admin'%}
+                    <a href="/consumidos/{{ row.0 }}" class="editBtn btn btn-primary ">Repuestos</a>      
                     {% endif %} 
                     
                 </div>
                 {% endif %}
+                
+                {% if nivel_ta == 'admin' or nivel_ta == 'supervisor'%}
+                <div class="col-md-1 float-right">
+                    <br>
+                    <button  type="button" class="btn btn-primary " onclick="editar( {{row.0}} )">Editar</button>      
+                </div>
+                {% endif %}    
             </div>
             <div class="row">       
                 <div class="form-group col-md-2">
@@ -268,8 +276,10 @@ function editar(id_ot) {
                     else if(datos[1] == 'EN REPARACIÓN'){
                         html += ` 
                         <option value="EN REPARACIÓN" selected>EN REPARACIÓN</option> 
-                        <option value="DEMORADO">DEMORADO</option> 
-                        <option value="FINALIZADO" >FINALIZADO</option>`;
+                        <option value="DEMORADO">DEMORADO</option>` 
+                        if("{{session['nivel_ta']}}" != 'supervisor'){
+                            html += ` <option value="FINALIZADO" >FINALIZADO</option>`
+                        };
                     }
                     else if(datos[1] == 'COTIZADO'){
                         html += ` 
