@@ -8,6 +8,7 @@ from datetime import datetime, date
 from pdfExample import gen_pdf_int,gen_pdf_fisc,gen_pdf_reci
 import pywhatkit   
 import time
+import datetime
 import os
 import pymysql.cursors 
 import json
@@ -233,7 +234,8 @@ def clientes():
     cur.close()             
     session['clientes_sel'] = 0
     connection.close()
-
+    print(data)
+    
     if request.method == 'POST':
         return render_template("search_cli.html", clientes = data, civa = data_iva)
     else:   
@@ -636,13 +638,15 @@ def insert_ru():
         try:
             rubro = request.form['rubro']
             id_empresa = session['id_empresa']
+            connection=conexion()
             cur = connection.cursor()
             query = 'insert into rubros (rubro, id_empresa)  values(%s, %s)'
             params = [rubro.upper(),id_empresa]
             cur.execute(query,params)
             connection.commit()
             cur.close()
-
+            connection.close()
+            
             flash('Rubro Agregado Correctamente')
         except:
 
@@ -1154,7 +1158,7 @@ def val_mp(t_mp, t_fa, id_cliente):
                 #Saco el ultimo interno 
                 connection=conexion()
                 cur = connection.cursor()
-                query = "select ifnull( max(numero),0)+1 as numero from facturas where id_empresa = %s and tipo_comp = %s"
+                query = "select ifnull( max(numero),0)+1 as numero from facturas where id_empresa = %s and id_tipo_comp = %s"
                 params = [id_empresa, tipo_comp]
                 cur.execute(query, params)
                 data = cur.fetchall()
@@ -1412,7 +1416,8 @@ def ver_fact():
             if tipo == 'IN ':
                 data1 = gen_pdf_int( id_factura )
             else:
-                data1 = gen_pdf_fisc( id_factura )
+                if session[nivel_ta] == "admin":
+                    data1 = gen_pdf_fisc( id_factura )
                 
             if data1:
                 print(data1)

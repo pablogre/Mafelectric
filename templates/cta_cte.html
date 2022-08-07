@@ -59,7 +59,9 @@
                         <td> {{row.0.strftime('%d/%m/%Y')}} </td>
                         <td> <a href="#" data-toggle="modal" data-target="#modalver" onclick="ver( {{row.3}}, '{{ row.1[0:3] }}' ) "> {{row.1}}  </a> </td>
                         <td style="text-align: right; "> {{row.2}} </td>
-                        <td> <button class="btn btn-default btn-xs" data-toggle="modal" data-target="#borrar{{row.3}}"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button></td>
+                        {% if session['nivel_ta'] == 'admin' %}
+                            <td> <button class="btn btn-default btn-xs" data-toggle="modal" data-target="#borrar{{row.3}}"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button></td>
+                        {%endif%}
                     </tr>
 
                     <div id="borrar{{row.3}}" class="modal fade" role="dialog">
@@ -179,6 +181,7 @@
 
 <script>
     function ver(v, p) {
+        
         $.post('/ver_fact', {
             id_factura: v,
             tipo: p
