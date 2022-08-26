@@ -21,13 +21,33 @@
                     <a class="nav-link" href="/view_art_tmp">Fact. Electrónica</a>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link" href="/rubros">Rubros</a>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbardrop" data-toggle="dropdown">
+                        Tablas
+                    </a>
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/rubros">Rubros</a>
+                        <a class="dropdown-item" href="/proveedores">Proveedores</a>
+                    </div>
                 </li>
-
-                <li class="nav-item">
-                    <a class="nav-link" href="/articulos">Artículos</a>
+                
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" id="navbardrop" data-toggle="dropdown">
+                        Articulos
+                    </a>
+                   
+                    <div class="dropdown-menu">
+                        <a class="dropdown-item" href="/articulos">Artículos</a>
+                        
+                        <div class="dropdown-divider"></div>
+                           
+                        <a class="dropdown-item" href="/cargar_stock">Carga Comp. de Proveedores</a>
+                        <a class="dropdown-item" href="/ver_comp_prov/{{ session['fe_hoy'] }}">Listar Comp. de Proveedores</a>
+                        <a class="dropdown-item" href="/nuevo_precio">Cambio de Precios</a>
+                        
+                    </div> 
                 </li>
+                
 
                 <li class="nav-item">
                     <a class="nav-link" href="/ver_trabajos">Trabajos</a>

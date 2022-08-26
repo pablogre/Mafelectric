@@ -3,7 +3,21 @@
     <div class="row">
         <div class="col md-12">
             <div class="jumbotron p-3">
-                <input type="text" placeholder="Buscar" onkeyup="search(this.value)" size="8"> <button type="button" class="btn btn-primary">Buscar</button> <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#mymodal">Nuevo</button>                {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {% if 'CANCELADA' in message %}
+                <div class="row">
+                    
+                    <div class="col-sm-3 col-md-6">
+                        <div class="form-group">
+                            <input class="form-control" type="text" id="buscar" placeholder="Buscar" onkeyup="search(this.value)">
+                        </div>  
+                    </div>
+                    
+                    <div class="col-sm-3 col-md-6">
+                        <div class="form-group">     
+                            <button type="button" class="btn btn-success float-right" data-toggle="modal" data-target="#mymodal">Nuevo</button>      
+                        </div>
+                    </div>
+                </div>
+                {% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %} {% if 'CANCELADA' in message %}
                 <!-- SI ESTA LA PALABRA EXISTE EN EL MENSAJE MUESTO LA CLASE WARNING SI NO SUCCESS-->
                 <div class="alert alert-danger alert-dismissable" role="alert">
                     <button type="button" class="close" data-dismiss="alert" aria-label="close">
@@ -30,125 +44,18 @@
                         {% for row in articulos %}
 
                         <tr>
-                            <td> <a href="/update_art/{{row.0}}" data-toggle="modal" data-target="#modaledit{{row.0}}"> {{row.2}} </a> </td>
+                            <td> <button style="color:rgb(0, 140, 255)" type="button" class="btn btn-default btn-xs" onclick="editar( {{row.0}} )">{{row.2}}</button>  </td>
                             <td>{{row.5}}</td>
                             <td>
                                 <!--  <a href="/update_art/{{row.0}}" class="btn btn-default btn-xs" data-toggle="modal" data-target="#modaledit{{row.0}}"> <img src="/static/images/edit.png" alt="Editar" width="24" height="24"> </a>  -->
                                 <!-- <a href="/delete_cli/{{row.0}}" class="btn btn-default btn-xs" onclick="return confirm('Borra el Registro ?')"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></a> -->
-                                <button class="btn btn-default btn-xs" data-toggle="modal" data-target="#borrar{{row.0}}"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button>
+                                <!-- <button class="btn btn-default btn-xs" data-toggle="modal" data-target="#borrar{{row.0}}"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button> -->
+                                <button  type="button" class="btn btn-default btn-xs" onclick="borrar( {{row.0}} )"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button> 
                             </td>
+                            <!-- <td>
+                                <button  type="button" class="btn btn-default btn-xs" onclick="editar( {{row.0}} )"><img src="/static/images/edit.png" alt="Editar" width="24" height="24"></button> 
+                            </td> -->
                         </tr>
-
-
-                        <div id="borrar{{row.0}}" class="modal fade" role="dialog">
-                            <div class="modal-dialog">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h4 class="modal-title">Borra el Registro ?</h4>
-                                    </div>
-                                    <div class="modal-body">
-                                        <form name="borra" action="/delete_art/{{row.0}}" method="POST">
-                                            <div class="form-group">
-                                                <button class="btn btn-primary" type="submit">borrar</button>
-                                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal Edit Artículo-->
-                        <div id="modaledit{{row.0}}" class="modal fade" role="dialog">
-
-                            <div class="modal-dialog">
-
-                                <div class="modal-content">
-
-                                    <div class="modal-header">
-                                        <h4 class="modal-title">Editando Datos</h4>
-                                    </div>
-
-                                    <div class="modal-body">
-                                        <form name="editcli" action="{{url_for('update_art')}}" method="POST">
-                                            <div class="form-group">
-                                                <input type="hidden" name="id_art" value="{{row.0}}">
-
-                                                <label>Código:</label>
-                                                <input type="number" class="form-control" name="codigo" min="1" value="{{row.1}}">
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Artículo:</label>
-                                                <input type="text" class="form-control" name="articulo" value="{{row.2}}">
-                                            </div>
-                                            <div class="form-group">
-                                                <label>Rubro.:</label>
-                                                <select id="id_rubro" class="form-control" name="id_rubro"> 
-                                                        {% for rub in rubros %}
-                                                            {% if rub.0 == row.3 %}
-                                                              <option value="{{rub.0}}" selected=selected> {{rub.1}}</option>
-                                                            {% else %}    
-                                                              <option value="{{rub.0}}"> {{rub.1}}</option>
-                                                            {% endif %}    
-                                                    {% endfor %} 
-                                                    </select>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label>Costo:</label>
-                                                <input type="number" step="0.01" min="0" class="form-control" name="costo" value="{{row.4}}">
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label>Precio 1:</label>
-                                                <input type="number" step="0.01" min="0" class="form-control" name="precio1" value="{{row.5}}">
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label>Precio 2:</label>
-                                                <input type="number" step="0.01" min="0" class="form-control" name="precio2" value="{{row.6}}">
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label>Stock:</label>
-                                                <input type="number" step="1" min="0" class="form-control" name="stock" value="{{row.9}}" {% if  session['nivel_ta'] != 'admin'  %} disabled {% endif %}>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <label>Stock Mínimo:</label>
-                                                <input type="number" step="0.01" min="0" class="form-control" name="st_min" value="{{row.10}}" {% if session['nivel_ta'] != 'admin' %} disabled {% endif %}>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <!--
-                                                    <label>I.V.A.:</label>
-                                                    <input type="number" step="0.01" min="0"  max="100" class="form-control" name="iva" value="{{row.7}}">
-                                                 -->
-                                                <label>Seleccione alícuota de I.V.A.:</label>
-                                                <select name="iva" id="iva" required="1" class="form-control">
-                                                       {% for ali in ali_iva %} 
-                                                            {% if ali == row.7 %}
-                                                                <option value="{{ali}}" selected=selected> {{ali}} </option>
-                                                            {% else %}
-                                                                <option value="{{ali}}">{{ali}}</option>  
-                                                            {% endif %}     
-                                                        {% endfor %}
-                                                    </select>
-                                            </div>
-
-                                            <div class="form-group">
-                                                <button class="btn btn-primary" type="submit">Guardar</button>
-                                            </div>
-                                        </form>
-
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
 
                         {% endfor %}
                     </tbody>
@@ -158,81 +65,108 @@
             </div>
 
             <!-- Modal Add  -->
-            <div id="mymodal" class="modal fade" role="dialog">
-
+            <div id="mymodal" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false" >
                 <div class="modal-dialog">
-
                     <div class="modal-content">
-
                         <div class="modal-header">
                             <h4 class="modal-title">Nuevo Artículo</h4>
                         </div>
 
                         <div class="modal-body">
-                            <form action="{{url_for('insert_art')}}" method="POST">
-                                <input type="hidden" name="parametro" value="0">
+                          <!--   <form action="{{url_for('insert_art')}}" method="POST" onkeypress="return anular(event)"  onsubmit="return Validar()"> -->
                                 <div class="form-group">
                                     <label>Código:</label>
-                                    <input type="number" class="form-control" name="codigo" min="1" value="{{ ultimo.0 }}">
+                                    <input type="number" class="form-control" id="codigo" name="codigo" min="1" value="{{ ultimo.0 }}">
                                 </div>
+                              
                                 <div class="form-group">
                                     <label>Artículo:</label>
-                                    <input type="text" class="form-control" name="articulo">
-                                </div>
-                                <div class="form-group">
-                                    <label>Rubro.:</label>
-                                    <select id="id_rubro" class="form-control" name="id_rubro"> 
-                                            {% for rub in rubros %}
-                                                <option value="{{rub.0}}"> {{rub.1}}</option>
-                                            {% endfor %} 
-                                        </select>
+                                    <input type="text" class="form-control" id="articulo" name="articulo">
                                 </div>
 
                                 <div class="form-group">
+                                    <label>Rubro.:</label>
+                                    <select id="id_rubro" class="form-control" name="id_rubro" > 
+                                        <option value="0" selected disabled>Seleccione:</option>'    
+                                        {% for rub in rubros %}
+                                            <option value="{{rub.0}}"> {{rub.1}}</option>
+                                        {% endfor %} 
+                                    </select>
+                                </div>
+                                
+                                <div class="form-group">
+                                    <label>Proveedor.:</label>
+                                    <select id="id_prov" class="form-control" name="id_prov"> 
+                                        <option value="" selected disabled>Seleccione:</option>  
+                                        {% for prov in proveedores %}
+                                            <option value="{{prov.0}}"> {{prov.1}}</option>
+                                        {% endfor %} 
+                                    </select>
+                                </div>   
+
+                                <div class="form-group">
                                     <label>Costo:</label>
-                                    <input type="number" step="0.01" min="0" class="form-control" name="costo">
+                                    <input type="number" step="0.01" min="0" class="form-control" id="costo" name="costo">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Margen 1:</label>
+                                    <input type="number" step="1" min="0" class="form-control" id="margen1" name="margen1" onblur="precio1_a(this)">
                                 </div>
 
                                 <div class="form-group">
                                     <label>Precio 1:</label>
-                                    <input type="number" step="0.01" min="0" class="form-control" name="precio1">
+                                    <input type="number" step="0.01" min="0" class="form-control" id="precio1" name="precio1">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Margen 2:</label>
+                                    <input type="number" step="1" min="0" class="form-control" id="margen2" name="margen2" onblur="precio2_a(this)">
                                 </div>
 
                                 <div class="form-group">
                                     <label>Precio 2:</label>
-                                    <input type="number" step="0.01" min="0" class="form-control" name="precio2">
+                                    <input type="number" step="0.01" min="0" class="form-control" id="precio2" name="precio2">
                                 </div>
-
+                                <div class="form-group">
+                                    <label>Fecha Ult. Compra.:</label>
+                                    <input type="date" class="form-control" id="fe_ult" name="fe_ult" >
+                                </div>
                                 <div class="form-group">
                                     <label>Stock:</label>
-                                    
-                                    <input type="number" step="1" min="0" class="form-control" name="stock"  >
+                                    <input type="number" step="1" min="0" class="form-control" id="stock" name="stock">
                                 </div>
 
                                 <div class="form-group">
                                     <label>Stock Mínimo:</label>
-                                    <input type="number" step="1" min="0" class="form-control" name="st_min">
+                                    <input type="number" step="0.01" min="0" class="form-control" id="st_min" name="st_min">
                                 </div>
 
                                 <div class="form-group">
                                     <label>Seleccione alícuota de I.V.A.:</label>
                                     <select name="iva" id="iva" required="1" class="form-control">
+                                            
                                             {% for ali in ali_iva %} 
-                                                    <option value="{{ali}}">{{ali}}</option>    
+                                                {% if ali == 21 %}
+                                                    <option value="{{ali}}" selected=selected> {{ali}}</option>
+                                                {% else %}    
+                                                    <option value="{{ali}}"> {{ali}}</option>
+                                                {% endif %}     
                                             {% endfor %}
-                                        </select>
+                                    </select>
                                 </div>
                                 <div class="form-group">
-                                    <button class="btn btn-primary" type="submit">Añadir Artículo</button>
+                                    <button class="btn btn-primary guardar_alta" type="submit">Añadir Artículo</button>
+                                    <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Salir</button>
                                 </div>
 
                             </form>
 
                         </div>
 
-                        <div class="modal-footer">
+                        <!-- <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
-                        </div>
+                        </div> -->
 
                     </div>
                 </div>
@@ -242,14 +176,437 @@
     </div>
 </div>
 
+
+
+
+<!-- BORRAR -->
+<div id="borrar" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Borra el Registro ?</h4>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <input type="hidden" id="id_art">
+                    <button class="btn btn-primary" onclick="borrar2()" type="submit">borrar</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Edit Artículo-->
+<div id="modalEdit" class="modal fade" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Editando Datos</h4>
+            </div>
+
+            <div class="modal-body">
+                <!-- <form name="editcli" action="{{url_for('update_art')}}" method="POST"> -->
+                    <div class="form-group">
+                        <input type="hidden" id="e_id_art" name="e_id_art" >
+
+                        <label>Código:</label>
+                        <input type="number" class="form-control" id= "e_codigo" name="e_codigo" min="1" >
+                    </div>
+                   
+                    <div class="form-group">
+                        <label>Artículo:</label>
+                        <input type="text" class="form-control" id="e_articulos" name="e_articulo" >
+                    </div>
+
+                    <div class="form-group">
+                        <label>Rubro.:</label>
+                        <select id="e_id_rubro" class="form-control" name="e_id_rubro"> 
+                            {% for rub in rubros %}
+                                {% if rub.0 == articulos.0.4 %}
+                                    <option value="{{rub.0}}" selected> {{rub.0}} - {{rub.1}}</option>
+                                {% else %}    
+                                    <option value="{{rub.0}}"> {{rub.0}} - {{rub.1}}</option>
+                                {% endif %}    
+                            {% endfor %} 
+                        </select>
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>Proveedor.:</label>
+                        <select id="e_id_prov" class="form-control" name="e_id_prov"> 
+                            {% for prov in proveedores %}
+                                {% if prov.0 == articulos.0.4 %}
+                                    <option value="{{prov.0}}" selected>{{prov.0}} - {{prov.1}}</option>
+                                {% else %}    
+                                    <option value="{{prov.0}}"> {{prov.0}} - {{prov.1}}</option>
+                                {% endif %}    
+                            {% endfor %} 
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Costo:</label>
+                        <input type="number" step="0.1" min="0" class="form-control" id="e_costo" name="e_costo" >
+                    </div>
+
+                    <div class="form-group">
+                        <label>Margen 1:</label>
+                        <input type="number" step="0.1" min="0" class="form-control" id="e_margen1" name="e_margen1" onblur="precio1(this)">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio 1:</label>
+                        <input type="number" step="0.1" min="0" class="form-control" id="e_precio1" name="e_precio1">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Margen 2:</label>
+                        <input type="number" step="0.1" min="0" class="form-control" id="e_margen2" name="e_margen2" onblur="precio2(this)">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio 2:</label>
+                        <input type="number" step="0.1" min="0" class="form-control" id="e_precio2"name="e_precio2" >
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha Ult. Compra.:</label>
+                        <input type="date" class="form-control" id="e_fe_ult" name="e_fe_ult" >
+                    </div>
+                    <div class="form-group">
+                        <label>Stock:</label>
+                        <input type="number" step="0.1" min="0" class="form-control" id="e_stock"name="e_stock" >
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stock Min.:</label>
+                        <input type="number" step="0.1" min="0" class="form-control" id="e_st_min"name="e_st_min" >
+                    </div>
+                    
+                    <div class="form-group">
+                        <!--
+                            <label>I.V.A.:</label> -->
+                        <label>Seleccione alícuota de I.V.A.:</label>
+                        <select name="e_iva" id="e_iva" required="1" class="form-control"> 
+                            {% for ali in ali_iva %} 
+                                {% if ali ==  articulos.0.14 %}
+                                    <option value="{{ali}}" selected> {{ali}} </option>
+                                {% else %}
+                                    <option value="{{ali}}"> {{ali}}</option>  
+                                {% endif %}     
+                            {% endfor %}
+                            </select>
+                    </div>
+
+                    <div class="form-group">
+                        <button class="btn btn-primary guardar" type="submit">Guardar</button>
+                        <button type="button" class="btn btn-secondary float-right" data-dismiss="modal">Salir</button>
+                    </div>
+                <!-- </form> -->
+
+            </div>
+            <!-- <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Salir</button>
+            </div> -->
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+
+
 <script type="text/javascript">
-    function search(v) {
+    
+   
+    $(document).ready(function(){
+    $("#barras").keydown(function(e){
+        if(e.which==17 || e.which==74 || e.keyCode == 13){
+            e.preventDefault();
+        }
+    })
+    $("#e_barras").keydown(function(e){
+        if(e.which==17 || e.which==74 || e.keyCode == 13){
+            e.preventDefault();
+        }
+    }
+    )
+});
+
+function search(v) {
         $.post('/articulos', {
             buscar: v
         }, function(data) {
             $('#search_art').html(data);
         });
     }
-</script>
 
-{% endblock %}
+
+function precio1_a(x){
+    if(x.value > 0){
+        let costo = $('#costo').val()
+        let margen1 = x.value
+        let precio1 = costo * ( 1 + margen1 /100 )
+        $("#precio1").val(precio1.toFixed())  
+    }
+}
+
+function precio2_a(x){
+    if(x.value > 0){
+        let costo = $('#costo').val()
+        let margen2 = x.value
+        let precio2 = costo * ( 1 + margen2 /100 )
+        $("#precio2").val(precio2.toFixed())  
+    }
+}
+
+function precio1(x){
+    if(x.value > 0){
+        let costo = $('#e_costo').val()
+        let margen1 = x.value
+        let precio1 = costo * ( 1 + margen1 /100 )
+        $("#e_precio1").val(precio1.toFixed())  
+    }
+}
+
+function precio2(x){
+    if(x.value > 0){
+        let costo = $('#e_costo').val()
+        let margen2 = x.value
+        let precio2 = costo * ( 1 + margen2 /100 )
+        $("#e_precio2").val(precio2.toFixed())  
+    }
+}
+
+function anular(e) {
+    tecla = (document.all) ? e.keyCode : e.which;
+    return (tecla != 13);
+}
+
+    
+$('#estados').change(function() { 
+    let estado = $( "#estados" ).val();
+    location.href = "../ver_trabajos?estado="+estado;
+});
+
+
+function borrar(id_art) {
+    let datos = { 'id_art': id_art}
+        $("#id_art").val(id_art)
+        $('#borrar').modal("show")
+    }
+   
+
+function borrar2() {
+    let datos = { 'id_art': $("#id_art").val()}
+    $.ajax({
+        url: "../delete_art_ajax",
+        type: "POST",
+        data: datos,
+       
+        success: function(data) {
+            console.log(data)
+            if (data.type == 'ok') {
+                //$('#borrar').modal("hide")
+                location.reload()
+            }
+        },
+        error: function() {
+            alert('ERROR,  CAGASTE FUEGO')
+        }
+    });
+}
+
+$('.guardar_alta').on('click', function() {
+    if($('#id_rubro').val()==null){
+        swal("Ingrese el Rubro","","warning")
+        return
+    }
+
+    if( $('#id_prov').val() == null ){
+        swal("Ingrese el Proveedor","","warning");
+        return
+    }
+
+    if( $('#precio1').val() == 0 ){
+        swal("Ingrese el Precio1","","warning");
+        return
+    }
+
+    if( $('#iva').val() == 0 ){
+        swal("Ingrese Alícuta de I.V.A.","","warning");
+        return
+    }
+
+    let datos = {
+        id_art: $('#id_art').val(),
+        codigo: $('#codigo').val(),
+        articulo: $('#articulo').val(),
+        id_rubro: $('#id_rubro').val(),
+        id_prov: $('#id_prov').val(),
+        costo: $('#costo').val(),
+        margen1: $('#margen1').val(),
+        precio1: $('#precio1').val(),
+        margen2: $('#margen2').val(),
+        precio2: $('#precio2').val(),
+        stock: $('#stock').val(),
+        st_min: $('#st_min').val(),
+        iva: $('#iva').val(),
+        fe_ult: $('#fe_ult').val()
+    }
+    console.log(datos)
+    $.ajax({
+        url: "../mod_arti_ajax/0",
+        type: "POST",
+        data: datos,
+        success: function(data) {
+            console.log('Data: '+data)
+            if (data.type == 'ok') {
+                /* swal({
+                        title: "Confirma el Alta ?",
+                        text: "",
+                        icon: "warning",
+                        buttons: true,
+                        dangerMode: true,
+                        })
+                        .then((willDelete) => {
+                        if (willDelete) {
+                            swal("Registro Agregado con Exito !", {
+                            icon: "success",
+                            });
+                            location.reload()
+                        } else {
+                            swal("Alta Cancelada!");
+                        }
+                        }); */
+                
+               
+                location.reload()
+            }
+        },
+        error: function() {
+            swal("Error al Grabar !","","error")
+        }
+    });
+})
+
+
+
+/////////// EDITAR 
+
+$('.guardar').on('click', function() {
+    if($('#e_id_rubro').val()==null){
+        swal("Ingrese el Rubro","","warning")
+        return
+    }
+    
+    if( $('#e_id_prov').val() == null ){
+        swal("Ingrese el Proveedor","","warning");
+        return
+    }
+
+    if( $('#e_precio1').val() == 0 ){
+        swal("Ingrese el Precio1","","warning");
+        return
+    }
+
+    if( $('#e_iva').val() == 0 ){
+        swal("Ingrese Alícuta de I.V.A.","","warning");
+        return
+    }
+
+    /// cambio la fecha de dd/mm/yyyy   a   yyyy/mm/dd
+    let date = $('#e_fe_ult').val()
+    let fe_ult =  date.split("/").reverse().join("/");
+    /////////////////////////////////////////////////////
+
+    let datos = {
+        id_art: $('#e_id_art').val(),
+        codigo: $('#e_codigo').val(),
+        articulo: $('#e_articulos').val(),
+        id_rubro: $('#e_id_rubro').val(),
+        id_prov: $('#e_id_prov').val(),
+        costo: $('#e_costo').val(),
+        margen1: $('#e_margen1').val(),
+        precio1: $('#e_precio1').val(),
+        margen2: $('#e_margen2').val(),
+        precio2: $('#e_precio2').val(),
+        stock: $('#e_stock').val(),
+        st_min: $('#e_st_min').val(),
+        iva: $('#e_iva').val(),
+        fe_ult: fe_ult
+
+    }
+    console.log(datos)
+    $.ajax({
+        url: "../mod_arti_ajax/1",
+        type: "POST",
+        data: datos,
+        
+        success: function(data) {
+            console.log('Data: '+data)
+            if (data.type == 'ok') {
+                location.reload()
+            }
+        },
+        error: function() {
+            swal("Error al Grabar !","","error")
+        }
+    });
+})
+
+
+function editar(id_art) {
+    let datos = { 'id_art': id_art}
+    $.ajax({
+        url: "../edit_arti_ajax",
+        type: "POST",
+        data: datos,
+       
+        success: function(data) {
+            console.log(data)
+            console.log("fecha :"+data.articulos[0][13])
+
+            if (data.type == 'ok') {
+                 
+                let articulos = data.articulos[0];
+                           
+                /// cambio la fecha de dd/mm/yyyy   a   yyyy/mm/dd
+                let date = articulos[12]
+                let fe_ult =  date.split("/").reverse().join("-");
+                console.log(typeof(fe_ult))
+                /////////////////////////////////////////////////////
+                console.log(fe_ult)
+               
+                let rubros = data.rubros;
+                let ali_iva = data.ali_iva;
+                titulo =  'Editando Articulo ' +' Nº: '+ articulos[0]
+                $(".modal-title").text(titulo);
+                $("#e_id_art").val(articulos[0]);
+                $("#e_codigo").val(articulos[1]);
+                $("#e_articulos").val(articulos[2]);
+                $("#e_id_rubro").val(articulos[3]);
+                $("#e_costo").val(articulos[5]);
+                $("#e_precio1").val(articulos[7]);
+                $("#e_precio2").val(articulos[9]);
+                $("#e_iva").val(articulos[12]);
+                $("#e_stock").val(articulos[10]);
+                $("#e_st_min").val(articulos[11]);
+                $("#e_id_prov").val(articulos[4]);
+                $("#e_margen1").val(articulos[6]);
+                $("#e_margen2").val(articulos[8]);
+                $("#e_fe_ult").attr('value',fe_ult)
+                $('#modalEdit').modal("show")
+            }
+        },
+        error: function() {
+            swal("Error al Grabar !","","error")
+        }
+    });
+}
+
+</script>
+{% endblock %}    
