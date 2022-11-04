@@ -228,7 +228,12 @@ $('.guardar').on('click', function() {
         success: function(data) {
             console.log('Data: '+data)
             if (data.type == 'ok') {
-                location.reload()
+                if(datos.estado == "ENTREGADO"){
+                    location.href = '/view_art_tmp'
+                }else{
+                    location.reload()
+                }
+               
             }
         },
         error: function() {

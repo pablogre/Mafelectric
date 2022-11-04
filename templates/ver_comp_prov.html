@@ -44,7 +44,7 @@
                         </div>     
                         <div class="col-md-1">
                             <div class="form-grup">
-                                <button  style="margin-top: 35px;" type="button" class="btn btn-default btn-xs" onclick="borrar({{row.2}} , '{{row.1}}', '{{row.0}}', '{{row.4}}')"><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button> 
+                                <button  style="margin-top: 35px;" type="button" class="btn btn-default btn-xs" onclick="borrar('{{row.2}}' , '{{row.1}}', '{{row.0}}', '{{row.4}}')" {% if  session['nivel_ta'] != 'admin'  %} disabled {% endif %}><img src="/static/images/eliminar.png" alt="Borra" width="24" height="24"></button> 
                                 
                             </div>
                         </div>                           

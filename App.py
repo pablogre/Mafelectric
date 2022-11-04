@@ -871,7 +871,7 @@ def mod_arti_ajax(parametro):
             try: 
                 connection=conexion()
                 cur = connection.cursor()
-                query = 'insert into articulos (codigo,  articulo, id_rubro, id_prov, costo, margen1, precio1, margen2, precio2, stock, st_min, iva, fe_ult, id_empresa) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+                query = 'insert into articulos (codigo,  articulo, id_rubro, id_prov, costo, margen1, precio1, margen2, precio2, stock, st_min, iva, fe_ult, id_empresa) values(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
                 params = [codigo, articulo, id_rubro, id_prov, costo, margen1, precio1, margen2, precio2, stock, st_min, iva, fe_ult, id_empresa]
                 print(params)
                 cur.execute(query,params) 
@@ -1117,6 +1117,23 @@ def delete_art_tmp(id_tmp):
         cur.close()
         connection.close()
         return redirect(url_for('view_art_tmp'))
+
+
+
+@app.route('/delete_art_ajax', methods = ['GET', 'POST'])
+def delete_art_ajax():
+    if not session.get('id_empresa'):
+        return render_template('login.html')
+    id = request.form['id_art']
+    connection=conexion()
+    cur = connection.cursor()
+    cur.execute('DELETE FROM articulos WHERE id_art = {0}'.format(id))
+    connection.commit()
+    flash('Registro borrado !')
+    connection.close()
+
+    jok = {"type": "ok", "status":200  }
+    return jsonify(jok)         
 
 # Borra todos los items de factura_tmp
 @app.route('/anular_fa/', methods =['GET', 'POST'] )
